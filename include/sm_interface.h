@@ -44,10 +44,16 @@ void sm2_sign	(u1 * data, size_t len, SM2SIG * signature, const AFPoint * priKey
 // data here should be sm3 digest.
 bool sm2_verify	(u1 * data, size_t len, SM2SIG * signature, const AFPoint * pubKey);
 
+// ===============================
+// ============ SM3 ==============
+// ===============================
 size_t sm3		(const u1 * data, size_t len, u1 digest[SM3_DIGEST_LENGTH]);
 size_t sm3_hmac	(const u1 * data, size_t len, const u1 * key, size_t keyLen, u1 mac[SM3_HMAC_SIZE]);
 
 
+// ===============================
+// ============ SM4 ==============
+// ===============================
 /* SM4 ECB mode */
 void sm4_key_schedule(const u1 key[SM4_KEY_SIZE], uint32_t rk[SM4_KEY_SCHEDULE]);
 void sm4_encrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
