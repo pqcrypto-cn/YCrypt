@@ -48,12 +48,29 @@ size_t sm3		(const u1 * data, size_t len, u1 digest[SM3_DIGEST_LENGTH]);
 size_t sm3_hmac	(const u1 * data, size_t len, const u1 * key, size_t keyLen, u1 mac[SM3_HMAC_SIZE]);
 
 
-// void sm4_key_schedule(const uint8_t key[SM4_KEY_SIZE], uint32_t rk[SM4_KEY_SCHEDULE]);
-// void sm4_encrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
-//     const uint8_t plaintext[SM4_BLOCK_SIZE], uint8_t ciphertext[SM4_BLOCK_SIZE]);
-// void sm4_decrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
-//     const uint8_t ciphertext[SM4_BLOCK_SIZE], uint8_t plaintext[SM4_BLOCK_SIZE]);
+/* SM4 ECB mode */
+void sm4_key_schedule(const u1 key[SM4_KEY_SIZE], uint32_t rk[SM4_KEY_SCHEDULE]);
+void sm4_encrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
+    const u1 plaintext[SM4_BLOCK_SIZE], u1 ciphertext[SM4_BLOCK_SIZE]);
+void sm4_decrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
+    const u1 ciphertext[SM4_BLOCK_SIZE], u1 plaintext[SM4_BLOCK_SIZE]);
 
-size_t sm4_ctr	(u1 * input, size_t len, u1 * output, u1 key[SM4_KEY_SIZE], u1 IV[SM4_BLOCK_SIZE]);
+/* SM4 CTR mode context */
+typedef struct {
+    uint32_t rk[SM4_KEY_SCHEDULE];
+    u1 counter[SM4_BLOCK_SIZE];
+    u1 keystream[SM4_BLOCK_SIZE];
+    size_t keystream_used;
+} SM4_CTR_CTX;
+
+/* SM4 CTR mode streaming API */
+void sm4_ctr_init(SM4_CTR_CTX *ctx, const u1 key[SM4_KEY_SIZE], const u1 iv[SM4_BLOCK_SIZE]);
+void sm4_ctr_update(SM4_CTR_CTX *ctx, const u1 *in, u1 *out, size_t len);
+void sm4_ctr_clean(SM4_CTR_CTX *ctx);
+
+/* SM4 CTR mode one-shot API */
+size_t sm4_ctr(u1 *input, size_t len, u1 *output, u1 key[SM4_KEY_SIZE], u1 iv[SM4_BLOCK_SIZE]);
+size_t sm4_ctr_once(const u1 *input, size_t len, u1 *output,
+    const u1 key[SM4_KEY_SIZE], const u1 iv[SM4_BLOCK_SIZE]);
 
 #endif
