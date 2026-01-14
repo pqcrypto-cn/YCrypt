@@ -81,7 +81,7 @@ int sm2_sign(
  * Verify a message signature using SM2 algorithm
  * @return 1 if signature is valid, 0 if invalid
  */
-int sm2_verify_msg(
+int sm2_verify(
     const SM2SIG* sig,
     const u1* msg,
     size_t msg_len,

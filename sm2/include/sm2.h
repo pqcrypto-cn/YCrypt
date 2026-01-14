@@ -30,7 +30,7 @@ int sm2_sign_dgst(
     u1 dgst[32],
     const PrivKey* priv_key);
 
-int sm2_verify(
+int sm2_verify_dgst(
     const SM2SIG *signature,
     const u1 dgst[32],
     const AFPoint * pubkey);
@@ -46,7 +46,7 @@ int sm2_sign(
     size_t idlen,
     const PubKey* pubkey,
     const PrivKey* privkey);
-int sm2_verify_msg(
+int sm2_verify(
     const SM2SIG *sig,
     const u1 *msg,
     size_t msg_len,

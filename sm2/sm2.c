@@ -157,52 +157,11 @@ int sm2_sign(
 	return sm2_sign_dgst(sig, dgst, privkey);
 }
 
-
-int sm2_verify_old(u1 dgst[32], const PubKey* pubkey, u32* r, u32* s)
-{
-	// verify that Q is indeed on the curve
-	// to prevent false curve attack
-	u32 e, t, R;
-	JPoint tmp1 = JPoint_ZERO, point1_jacobian = JPoint_ZERO;
-	AFPoint point1;
-
-	if (!is_on_curve(pubkey))
-	{
-		printf("Public key not on curve!\n");
-		return -1;
-	}
-
-	if (u32_ge(r, &SM2_N) || u32_eq_zero(r) || u32_ge(s, &SM2_N) || u32_eq_zero(s))
-		return -1;
-
-	add_mod_n(r, s, &t);
-	if (u32_eq_zero(&t))
-		return -1;
-
-	u1_to_u32(dgst, &e);
-
-	//times_basepoint(s, &tmp1);
-	ML_mul_basepoint(s, &tmp1);
-
-	times_point(pubkey, &t, &point1_jacobian);
-
-	add_JPoint(&tmp1, &point1_jacobian, &point1_jacobian);
-	jacobian_to_affine(&point1_jacobian, &point1);
-
-	//mod(&e, &SM2_N, &SM2_rhoN);
-	//mod(&point1.x, &SM2_N, &SM2_rhoN);
-	mod_n(&e, &e);
-	mod_n(&point1.x, &point1.x);
-	add_mod_n(&e, &(point1.x), &R);
-
-	return u32_eq(&R, r);
-}
-
 // Success: return 1.
 // Fail: return 0.
-int sm2_verify(
-	const SM2SIG *signature, 
-	const u1 dgst[32], 
+int sm2_verify_dgst(
+	const SM2SIG *signature,
+	const u1 dgst[32],
 	const AFPoint * pubkey)
 {
 	// verify that Q is indeed on the curve
@@ -243,11 +202,11 @@ int sm2_verify(
 
 // Success: return 1.
 // Fail: return 0.
-int sm2_verify_msg(
+int sm2_verify(
 	const SM2SIG *sig,
 	const u1 *msg,
-	size_t msg_len, 
-	const u1 *id, 
+	size_t msg_len,
+	const u1 *id,
 	size_t id_len,
 	const PubKey* pubkey)
 {
@@ -257,5 +216,5 @@ int sm2_verify_msg(
 	sm2_get_id_digest(ZA, id, id_len, pubkey);
 	sm2_get_message_digest(dgst, ZA, msg, msg_len);
 
-	return sm2_verify(sig, dgst, pubkey);
+	return sm2_verify_dgst(sig, dgst, pubkey);
 }

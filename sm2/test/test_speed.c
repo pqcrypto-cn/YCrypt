@@ -253,7 +253,7 @@ static void bench_sm2_verify(void)
 
     /* Warm up */
     for (int i = 0; i < 100; i++) {
-        sm2_verify(&sig, dgst, &pubkey);
+        sm2_verify_dgst(&sig, dgst, &pubkey);
     }
 
     /* Benchmark YCrypt */
@@ -263,13 +263,13 @@ static void bench_sm2_verify(void)
         double elapsed;
 
         do {
-            sm2_verify(&sig, dgst, &pubkey);
+            sm2_verify_dgst(&sig, dgst, &pubkey);
             iterations++;
             elapsed = get_time_sec() - start;
         } while (elapsed < MIN_BENCH_TIME);
 
         double ops_per_sec = iterations / elapsed;
-        print_speed("sm2_verify (YCrypt)", ops_per_sec);
+        print_speed("sm2_verify_dgst (YCrypt)", ops_per_sec);
     }
 
 #ifdef TEST_WITH_OPENSSL
@@ -356,7 +356,7 @@ static void bench_sm2_sign_msg(void)
 
     /* Warm up */
     for (int i = 0; i < 50; i++) {
-        sm2_verify_msg(&sig, message, sizeof(message), id, strlen((char*)id), &pubkey);
+        sm2_verify(&sig, message, sizeof(message), id, strlen((char*)id), &pubkey);
     }
 
     /* Benchmark YCrypt verify with message */
@@ -366,13 +366,13 @@ static void bench_sm2_sign_msg(void)
         double elapsed;
 
         do {
-            sm2_verify_msg(&sig, message, sizeof(message), id, strlen((char*)id), &pubkey);
+            sm2_verify(&sig, message, sizeof(message), id, strlen((char*)id), &pubkey);
             iterations++;
             elapsed = get_time_sec() - start;
         } while (elapsed < MIN_BENCH_TIME);
 
         double ops_per_sec = iterations / elapsed;
-        print_speed("sm2_verify_msg (msg, YCrypt)", ops_per_sec);
+        print_speed("sm2_verify (msg, YCrypt)", ops_per_sec);
     }
 }
 

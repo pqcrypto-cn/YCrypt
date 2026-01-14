@@ -86,7 +86,7 @@ void sm2_single_test() {
 	}
 	puts("");
 
-	ret = sm2_verify_msg(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
+	ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 	if (ret != 1)
 	{
 		printf("change da, low level sm2_verify failed.\n");
@@ -125,7 +125,7 @@ int sm2_self_check()
         sm2_sign(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey, &privkey);
 
 		// ret = sm2_verify(message, MSG_LEN, &sig, &pubkey);
-		ret = sm2_verify_msg(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
+		ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 		if (ret != 1)
 		{
 			fail += 1;
@@ -153,7 +153,7 @@ int sm2_self_check()
 
         sm2_sign(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey, &privkey);
 		// ret = sm2_verify(message, MSG_LEN, &sig, &pubkey);
-        ret = sm2_verify_msg(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
+        ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 		if (ret != 1)
 		{
 			fail += 1;
@@ -218,7 +218,7 @@ int sm2_demo(unsigned char *message, size_t len) //demo for sign and verify
 		printf("%llu\n", sig.s.v[i]);
 	}
 
-	ret = sm2_verify_msg(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
+	ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 	if (ret != 1)
 	{
 		printf("[ERROR] -- low level sm2_verify failed.\n");
@@ -352,7 +352,7 @@ void sm2_check_use_gmssl()
 		sm2_z256_from_bytes((uint64_t*)sig.r.v, sig_gmssl.r);
 		sm2_z256_from_bytes((uint64_t*)sig.s.v, sig_gmssl.s);
 
-		ret = sm2_verify(&sig, data, &pubKey);
+		ret = sm2_verify_dgst(&sig, data, &pubKey);
 		if (ret != 1)
 		{
 			fail+=1;
@@ -855,7 +855,7 @@ static int ossl_test_openssl_sign_ycrypt_verify()
         }
 
         // Verify with YCrypt
-        if (sm2_verify(&sig, dgst, &pubkey) != 1) {
+        if (sm2_verify_dgst(&sig, dgst, &pubkey) != 1) {
             fail++;
         }
 
@@ -931,7 +931,7 @@ static int ossl_test_roundtrip()
             continue;
         }
 
-        if (sm2_verify(&sig_o, dgst, &pubkey) != 1) {
+        if (sm2_verify_dgst(&sig_o, dgst, &pubkey) != 1) {
             fail++;
         }
 
