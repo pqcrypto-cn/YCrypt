@@ -1,7 +1,14 @@
 
 #include <time.h>
+#include <string.h>
+#include <stdlib.h>
 #include "../include/sm3.h"
 #include "../include/utils.h"
+
+#ifdef TEST_WITH_OPENSSL
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#endif
 
 #define NTESTS 10000
 #define MAX_MSGLEN 5000
@@ -226,11 +233,171 @@ void sm3_hmac_self_check() {
     }
 }
 
+#ifdef TEST_WITH_OPENSSL
+/* ============================================================
+ * OpenSSL Cross Verification Tests
+ * ============================================================ */
+
+static int openssl_sm3_hash(const uint8_t *input, size_t len, uint8_t *output)
+{
+	EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+	if (!ctx) return -1;
+
+	if (EVP_DigestInit_ex(ctx, EVP_sm3(), NULL) != 1) {
+		EVP_MD_CTX_free(ctx);
+		return -1;
+	}
+
+	if (EVP_DigestUpdate(ctx, input, len) != 1) {
+		EVP_MD_CTX_free(ctx);
+		return -1;
+	}
+
+	unsigned int digest_len;
+	if (EVP_DigestFinal_ex(ctx, output, &digest_len) != 1) {
+		EVP_MD_CTX_free(ctx);
+		return -1;
+	}
+
+	EVP_MD_CTX_free(ctx);
+	return 0;
+}
+
+static void test_sm3_vs_openssl()
+{
+	printf("\n========== SM3 vs OpenSSL Test ==========\n");
+	printf("OpenSSL version: %s\n", OPENSSL_VERSION_TEXT);
+	printf("Tests: %d random messages\n\n", NTESTS);
+
+	uint8_t *message = malloc(MAX_MSGLEN);
+	uint8_t our_result[32];
+	uint8_t openssl_result[32];
+
+	int fail_count = 0;
+
+	srand((unsigned int)time(NULL));
+
+	for (int test = 0; test < NTESTS; test++) {
+		/* Random length from 0 to MAX_MSGLEN */
+		size_t len = rand() % (MAX_MSGLEN + 1);
+
+		/* Generate random message */
+		for (size_t i = 0; i < len; i++) {
+			message[i] = (uint8_t)(rand() % 256);
+		}
+
+		/* Our implementation */
+		sm3(message, len, our_result);
+
+		/* OpenSSL implementation */
+		if (openssl_sm3_hash(message, len, openssl_result) != 0) {
+			printf("[ERROR] OpenSSL hash failed at test %d\n", test);
+			fail_count++;
+			continue;
+		}
+
+		/* Compare */
+		if (memcmp(our_result, openssl_result, 32) != 0) {
+			fail_count++;
+			if (fail_count <= 3) {
+				printf("[FAIL] Mismatch at test %d, len=%zu\n", test, len);
+				printf("Our    : ");
+				for (int i = 0; i < 32; i++) printf("%02X", our_result[i]);
+				printf("\n");
+				printf("OpenSSL: ");
+				for (int i = 0; i < 32; i++) printf("%02X", openssl_result[i]);
+				printf("\n");
+			}
+		}
+	}
+
+	free(message);
+
+	if (fail_count == 0) {
+		printf("[PASS] All %d tests passed against OpenSSL\n", NTESTS);
+	} else {
+		printf("[FAIL] %d/%d tests failed against OpenSSL\n", fail_count, NTESTS);
+	}
+}
+
+/* Test SM3-HMAC against OpenSSL */
+static void test_sm3_hmac_vs_openssl()
+{
+	printf("\n========== SM3-HMAC vs OpenSSL Test ==========\n");
+	printf("Tests: %d random messages with random keys\n\n", NTESTS);
+
+	uint8_t *message = malloc(MAX_MSGLEN);
+	uint8_t *key = malloc(256);
+	uint8_t our_result[32];
+	uint8_t openssl_result[32];
+
+	int fail_count = 0;
+
+	srand((unsigned int)time(NULL));
+
+	for (int test = 0; test < NTESTS; test++) {
+		/* Random message length from 0 to MAX_MSGLEN */
+		size_t msg_len = rand() % (MAX_MSGLEN + 1);
+		/* Random key length from 1 to 256 */
+		size_t key_len = (rand() % 256) + 1;
+
+		/* Generate random message and key */
+		for (size_t i = 0; i < msg_len; i++) {
+			message[i] = (uint8_t)(rand() % 256);
+		}
+		for (size_t i = 0; i < key_len; i++) {
+			key[i] = (uint8_t)(rand() % 256);
+		}
+
+		/* Our implementation */
+		sm3_hmac(message, msg_len, key, key_len, our_result);
+
+		/* OpenSSL implementation */
+		unsigned int mac_len = 32;
+		if (HMAC(EVP_sm3(), key, key_len, message, msg_len, openssl_result, &mac_len) == NULL) {
+			printf("[ERROR] OpenSSL HMAC failed at test %d\n", test);
+			fail_count++;
+			continue;
+		}
+
+		/* Compare */
+		if (memcmp(our_result, openssl_result, 32) != 0) {
+			fail_count++;
+			if (fail_count <= 3) {
+				printf("[FAIL] HMAC mismatch at test %d, msg_len=%zu, key_len=%zu\n", test, msg_len, key_len);
+				printf("Our    : ");
+				for (int i = 0; i < 32; i++) printf("%02X", our_result[i]);
+				printf("\n");
+				printf("OpenSSL: ");
+				for (int i = 0; i < 32; i++) printf("%02X", openssl_result[i]);
+				printf("\n");
+			}
+		}
+	}
+
+	free(message);
+	free(key);
+
+	if (fail_count == 0) {
+		printf("[PASS] All %d HMAC tests passed against OpenSSL\n", NTESTS);
+	} else {
+		printf("[FAIL] %d/%d HMAC tests failed against OpenSSL\n", fail_count, NTESTS);
+	}
+}
+#endif
+
 int main()
 {
 	sm3_self_check();
 	sm3_hmac_self_check();
 	sm3_gmssl_test_case();
+
+#ifdef TEST_WITH_OPENSSL
+	test_sm3_vs_openssl();
+	test_sm3_hmac_vs_openssl();
+#else
+	printf("\n[INFO] Compile with TEST_WITH_OPENSSL=1 to test against OpenSSL\n");
+#endif
 
 	return 0;
 }

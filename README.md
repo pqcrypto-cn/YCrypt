@@ -12,7 +12,7 @@ YCrypt 在性能上表现优异，**领先于国内外所有开源国密实现**
 - **易于集成**：提供简洁清晰的 API 接口，方便快速集成
 - **全面测试**：包含完整的测试用例和性能基准测试
 
-**YCrypt** is a high-performance Chinese National Cryptographic Algorithms library, implementing SM2 elliptic curve public key cryptography, SM3 cryptographic hash algorithm, and SM4 block cipher algorithm. This project is developed and maintained by Professor Yu Yu's team ([Shanghai Jiao Tong University](https://crypto.sjtu.edu.cn/lab/) and the [Shanghai Qi Zhi Institute]((https://sqz.ac.cn/password-48)), committed to providing autonomous, controllable, secure and efficient implementations of Chinese national cryptographic algorithms, offering complete solutions for cryptographic applications.
+**YCrypt** is a high-performance Chinese National Cryptographic Algorithms library, implementing SM2 elliptic curve public key cryptography, SM3 cryptographic hash algorithm, and SM4 block cipher algorithm. This project is developed and maintained by Professor Yu Yu's team ([Shanghai Jiao Tong University](https://crypto.sjtu.edu.cn/lab/) and the [Shanghai Qi Zhi Institute](https://sqz.ac.cn/password-48)), committed to providing autonomous, controllable, secure and efficient implementations of Chinese national cryptographic algorithms, offering complete solutions for cryptographic applications.
 
 YCrypt demonstrates excellent performance, **leading all domestic and international open-source implementations of Chinese national cryptographic algorithms**. It won **the highest award - First Prize in the second phase of the 2024 Financial Cryptography Cup**.
 
@@ -76,12 +76,27 @@ make
 |--------|-------------|---------|
 | `YCRYPT_BUILD_TESTS` | Build test programs | ON |
 | `YCRYPT_BUILD_SPEED` | Build speed benchmark programs | OFF |
-| `YCRYPT_WITH_OPENSSL` | Enable OpenSSL comparison in tests | OFF |
+| `YCRYPT_WITH_OPENSSL` | Enable OpenSSL cross-verification in tests | OFF |
 
-**Example**: Build with speed benchmarks and OpenSSL comparison:
+**Note**: When `YCRYPT_WITH_OPENSSL` is enabled, test programs will include cross-verification tests against OpenSSL's SM2/SM3/SM4 implementations. This helps verify correctness and compatibility with OpenSSL 3.x+.
 
+**Examples**:
+
+Build with all tests and OpenSSL comparison:
+```bash
+cmake -DYCRYPT_BUILD_TESTS=ON -DYCRYPT_WITH_OPENSSL=ON ..
+make
+```
+
+Build with speed benchmarks and OpenSSL comparison:
 ```bash
 cmake -DYCRYPT_BUILD_SPEED=ON -DYCRYPT_WITH_OPENSSL=ON ..
+make
+```
+
+Build everything (tests + benchmarks + OpenSSL):
+```bash
+cmake -DYCRYPT_BUILD_TESTS=ON -DYCRYPT_BUILD_SPEED=ON -DYCRYPT_WITH_OPENSSL=ON ..
 make
 ```
 
@@ -94,6 +109,63 @@ make
 - **Benchmarks**: `test_speed_sm2`, `test_speed_sm3`, `test_speed_sm4`
 
 **Note**: For most applications, we recommend using the unified `libycrypt.so` library for simplicity and ease of integration.
+
+---
+
+## Testing
+
+### Running Tests
+
+After building with `YCRYPT_BUILD_TESTS=ON`, run the test programs:
+
+```bash
+# Run SM3 tests
+./build/bin/test_sm3
+
+# Run SM4 tests
+./build/bin/test_sm4
+
+# Run SM2 tests
+./build/bin/test_sm2
+```
+
+### OpenSSL Cross-Verification
+
+YCrypt includes comprehensive cross-verification tests against OpenSSL 3.x+. Build with OpenSSL support:
+
+```bash
+cmake -DYCRYPT_WITH_OPENSSL=ON ..
+make
+./build/bin/test_sm3   # Includes 10,000 SM3 + SM3-HMAC tests vs OpenSSL
+./build/bin/test_sm4   # Includes 10,000 SM4-CTR tests vs OpenSSL
+./build/bin/test_sm2   # Includes SM2 sign/verify tests vs OpenSSL
+```
+
+Each test program performs:
+- **SM3**: Hash and HMAC comparison with random messages (0-5000 bytes)
+- **SM4**: CTR mode encryption comparison with random data (1-4096 bytes)
+- **SM2**: Key generation, signature, and verification cross-testing
+
+### Using Makefile (Individual Modules)
+
+You can also build and test individual modules using their standalone Makefiles:
+
+```bash
+# SM3 with OpenSSL comparison
+cd sm3
+make test TEST_WITH_OPENSSL=1
+./test/test_sm3
+
+# SM4 with OpenSSL comparison
+cd sm4
+make test TEST_WITH_OPENSSL=1
+./test/test_sm4
+
+# SM2 with OpenSSL comparison
+cd sm2
+make test TEST_WITH_OPENSSL=1
+./test/test_sm2
+```
 
 ---
 
@@ -177,13 +249,30 @@ YCrypt achieves leading performance across all implementations:
 | SM4 | Encryption (MB/s) | See benchmark results |
 | SM2 | Sign/Verify (ops/s) | See benchmark results |
 
+### Running Benchmarks
+
+Build with speed benchmarks enabled:
+
+```bash
+cmake -DYCRYPT_BUILD_SPEED=ON ..
+make
+```
+
 Run the speed benchmarks to see performance on your platform:
 
 ```bash
-./build/sm2/test_speed_sm2
-./build/sm3/test_speed_sm3
-./build/sm4/test_speed_sm4
+# Using CMake build
+./build/bin/test_speed_sm3
+./build/bin/test_speed_sm4
+./build/bin/test_speed_sm2
+
+# Or using individual Makefiles
+cd sm3 && make speed && ./test/test_speed
+cd sm4 && make speed && ./test/test_speed
+cd sm2 && make speed && ./test/test_speed
 ```
+
+**Note**: Speed benchmarks link against the static library (`libycrypt.a`) for optimal performance, while test programs use the shared library (`libycrypt.so`) for easier development and testing.
 
 ---
 
