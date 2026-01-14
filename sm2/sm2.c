@@ -19,8 +19,6 @@ void sm2_get_public_key(const PrivKey *privkey, PubKey* pubkey)
 	JPoint rst_jacobian;
 	ML_mul_basepoint(&(privkey->da), &rst_jacobian);
 	jacobian_to_affine(&rst_jacobian, pubkey);
-	// montg_times_base_point(&(privkey->da), &rst_jacobian);
-	// montg_jpoint_to_apoint(&rst_jacobian, pubkey->x.v, pubkey->y.v);
 }
 
 // Get ZA=Hash256(ENTLA || id || a || b || xG || yG || xA || yA)

@@ -102,7 +102,7 @@ bool u32_eq_one(const u32* a)
 // Note: P[0] = P[2] = -1, can use shortcut for multiplication by -1
 void sm2p_mong_mul_core(UINT64 interim[9], u32* result)
 {
-	const static size_t LEN = 9;
+	static const size_t LEN = 9;
 	int i = 0;
 	for (i = 0; i < 4; i++)
 	{
@@ -220,7 +220,7 @@ void sm2p_mong_mul(const u32* x, const u32* y, u32* result)
 
 void sm2n_mong_mul_core(UINT64 interim[9], u32* result)
 {
-	const static size_t LEN = 9;
+	static const size_t LEN = 9;
 	int i = 0, j = 0;
 	for(i = 0; i < 4; i++)
 	{

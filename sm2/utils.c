@@ -103,23 +103,13 @@ void print_u32(const u32* input)
 #else
 	printf("0x%016llX, 0x%016llX, 0x%016llX, 0x%016llX\n", (UINT64)input->v[0], (UINT64)input->v[1], (UINT64)input->v[2], (UINT64)input->v[3]);
 #endif
-	//printf("0x");
-	//for (u4 i = 0; i < 4; i++)
-	//{
-	//	//printf("0x%016llX, ", input[i]);
-	//	printf("%016llX", input.v[3 - i]);
-	//}
-	//printf("\n");
-
 }
 
 void print_u64(const u8 input[8])
 {
-	//printf("0x");
 	for (u4 i = 0; i < 8; i++)
 	{
 		printf("0x%016llX, ", (UINT64)input[i]);
-		//printf("%016llX", input[7 - i]);
 	}
 	printf("\n");
 
@@ -217,7 +207,7 @@ void random_fill(uint8_t * buffer, size_t len)
 	UINT64 i = 0, len2, res;
 	uint16_t* p2 = (uint16_t*)buffer;
 
-	//srand((unsigned)time(NULL));
+	srand((unsigned)time(NULL));
 	
 	len2 = len / 2;
 	res = len & 1;

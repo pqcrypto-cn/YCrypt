@@ -6,7 +6,7 @@
 
 char hex2char(uint8_t h)
 {
-	if (h >= 0 && h <= 9)
+	if (h <= 9)
 	{
 		return h + '0';
 	}
@@ -16,7 +16,7 @@ char hex2char(uint8_t h)
 	}
 	else
 	{
-		//return 
+		//return
 		exit(0);
 	}
 }
@@ -70,7 +70,6 @@ u8 u8_rand()
 
 void u32_rand(u32* input)
 {
-	//input = { u8_rand(), u8_rand(), u8_rand(), u8_rand() };
 	input->v[0] = u8_rand();
 	input->v[1] = u8_rand();
 	input->v[2] = u8_rand();
@@ -103,13 +102,6 @@ void u1_to_u32(u1 const input[32], u32* result)
 
 void u4_to_u32(u4 input[8], u32* result)
 {
-	/*
-	result.v[0] = *(u8 *)(input + 0);
-	result.v[1] = *(u8 *)(input + 2);
-	result.v[2] = *(u8 *)(input + 4);
-	result.v[3] = *(u8 *)(input + 6);
-	*/
-
 	result->v[0] = ((u8)input[1] << 32) + (u8)input[0];
 	result->v[1] = ((u8)input[3] << 32) + (u8)input[2];
 	result->v[2] = ((u8)input[5] << 32) + (u8)input[4];

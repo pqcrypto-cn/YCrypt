@@ -38,7 +38,6 @@
 #endif
 
 #define MSG_LEN 10000
-// #define NTESTS 500000
 #define NTESTS 500
 
 
@@ -55,8 +54,6 @@ void sm2_single_test() {
 	}
 	puts("\n");
 
-	u1 id_dgst[32], dgst[32];
-	// u32 da = { 0x667eeb532ee03680, 0xee8c369f729cdcb6, 0x10570e23664e918d, 0x01a5b14aba92a216 };
 	PrivKey privkey;
 	PubKey pubkey;
 	SM2SIG sig;
@@ -117,14 +114,8 @@ int sm2_self_check()
 		// generate keypair
         sm2_keypair(&pubkey, &privkey);
 
-		// //caculate dgst
-		// sm2_get_id_digest(IDA, strlen((char *)IDA), &pubkey, id_dgst);
-		// sm2_get_message_digest(message, MSG_LEN, id_dgst, dgst);
-		// sm2_sign(message, MSG_LEN, &sig, &privkey);
-
         sm2_sign(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey, &privkey);
 
-		// ret = sm2_verify(message, MSG_LEN, &sig, &pubkey);
 		ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 		if (ret != 1)
 		{
@@ -146,13 +137,8 @@ int sm2_self_check()
 	{
 		random_fill(message, MSG_LEN);
 
-		//caculate dgst
-		// sm2_get_id_digest(IDA, strlen((char *)IDA), &pubkey, id_dgst);
-		// sm2_get_message_digest(message, MSG_LEN, id_dgst, dgst);
-		// sm2_sign(message, MSG_LEN, &sig, &privkey);
-
         sm2_sign(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey, &privkey);
-		// ret = sm2_verify(message, MSG_LEN, &sig, &pubkey);
+
         ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
 		if (ret != 1)
 		{
@@ -175,7 +161,6 @@ int sm2_demo(unsigned char *message, size_t len) //demo for sign and verify
 	unsigned char IDA[17] = "1234567812345678";
 	int ret;
 
-	u1 id_dgst[32], dgst[32];
 	PrivKey privkey;
 	PubKey pubkey;
 	SM2SIG sig;
@@ -185,14 +170,8 @@ int sm2_demo(unsigned char *message, size_t len) //demo for sign and verify
 	// generate keypair
     sm2_keypair(&pubkey, &privkey);
 
-
-	//caculate dgst
-	// sm2_get_id_digest(IDA, strlen((char*)IDA), &pubkey, id_dgst);
-	// sm2_get_message_digest(message, len, id_dgst, dgst);
-
 	printf("[INFO] --- use random private key  ---- start sign  ---\n");
-	// sm2_sign(dgst, MSG_LEN, &sig, &privkey);
-    sm2_sign(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey, &privkey);
+    sm2_sign(&sig, message, len, IDA, strlen((char*)IDA), &pubkey, &privkey);
 	printf("=========== private ============\n");
 	for (int i = 0; i < 4; i++) {
 		printf("%llu\n", privkey.da.v[i]);
@@ -218,7 +197,7 @@ int sm2_demo(unsigned char *message, size_t len) //demo for sign and verify
 		printf("%llu\n", sig.s.v[i]);
 	}
 
-	ret = sm2_verify(&sig, message, MSG_LEN, IDA, strlen((char*)IDA), &pubkey);
+	ret = sm2_verify(&sig, message, len, IDA, strlen((char*)IDA), &pubkey);
 	if (ret != 1)
 	{
 		printf("[ERROR] -- low level sm2_verify failed.\n");
@@ -968,7 +947,7 @@ void sm2_check_use_openssl()
 }
 #endif
 
-int main(int argc, char* argv[])
+int main()
 {
 	// sm2_single_test();
 	sm2_self_check();

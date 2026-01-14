@@ -5,7 +5,7 @@
 #include "sm2_const.h"
 
 // Jacobian point zero is encoded as (x, y, 0)
-const static JPoint JPoint_ZERO = { { 1, 0, 0, 0 },{ 1, 0, 0, 0 },{ 0, 0, 0, 0 } };
+static const JPoint JPoint_ZERO = { { 1, 0, 0, 0 },{ 1, 0, 0, 0 },{ 0, 0, 0, 0 } };
 
 bool equ_to_AFPoint_one(const AFPoint* point);
 bool equ_to_JPoint_one(const JPoint* point);

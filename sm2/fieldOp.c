@@ -6,20 +6,14 @@ void get_random_u32_in_mod_n(u32* k)
 {
 	u32_rand(k);
 	mod_n(k, k);
-	//mod(k, &SM2_N, &SM2_rhoN);
-	//mod(k, SM2_N);
-
 }
 void get_random_u32_in_mod_p(u32* k)
 {
 	u32_rand(k);
 	mod_p(k, k);
-	//mod(k, &SM2_P, &SM2_rhoP);
 }
 
-
-//cause 2*P>2**256, 2*N>2**256, we can use 'if' to replace 'while'
-
+// because 2*P>2**256, 2*N>2**256, we can use 'if' to replace 'while'
 void mod(u32* input, const u32* m, const u32* rhoM)
 {
 	if (u32_ge(input, m))
@@ -27,7 +21,6 @@ void mod(u32* input, const u32* m, const u32* rhoM)
 		u32_add(input, rhoM, input);
 	}
 }
-
 
 void double_mod(const u32* x, u32* result, const u32* m, const u32* rhoM)
 {
@@ -38,6 +31,7 @@ void double_mod(const u32* x, u32* result, const u32* m, const u32* rhoM)
 	if (u32_ge(result, m))
 		u32_add(rhoM, result, result);
 }
+
 //before add_mod, x and y must in field M.
 void add_mod(const u32* x, const u32* y, u32* result, const u32* m, const u32* rhoM)
 {
@@ -74,8 +68,7 @@ void mul_mod_n(const u32* x, const u32* y, u32* result)
 		*result = *x;
 		return;
 	}
-	// sm2n_mong_mul(x->v, y->v, result->v);
-	// sm2n_mong_mul(result->v, SM2_NH.v, result->v);
+
 	sm2n_mong_mul(x, y, result);
 	sm2n_mong_mul(result, &SM2_NH, result);
 }
@@ -91,14 +84,8 @@ void pow_mod_p(const u32* x, u32* result)
 	}
 
 	// Non-standard use of montgomery multiplication
-
-	//sm2p_mong_pow(x, result);
 	montg_sqr_mod_p(x, result);
-
-	//sm2p_mong_mul(result, &SM2_H, result);
 	montg_mul_mod_p(result, &SM2_H, result);
-	//montg_back_mod_p(result->v, result->v);
-
 #else
 	u8 res[8];
 	if (u32_eq_one(x))
@@ -107,12 +94,7 @@ void pow_mod_p(const u32* x, u32* result)
 		return;
 	}
 	raw_pow(x->v, res);
-	//puts("raw pow res:");
-	//printBN(res, 8);
 	solinas_reduce(res, result);
-	// solinas_reduce_asm(res, result->v);
-	//puts("reduce res:");
-	//printBN((UINT64*)result, 4);
 #endif
 }
 
@@ -131,14 +113,8 @@ void mul_mod_p(const u32* x, const u32* y, u32* result)
 	}
 
 	// Non-standard use of montgomery multiplication
-
-	//sm2p_mong_mul(x, y, result);
 	montg_mul_mod_p(x->v, y->v, result->v);
-
-	//sm2p_mong_mul(result, &SM2_H, result);
 	montg_mul_mod_p(result->v, SM2_H.v, result->v);
-	//to_montg_mod_p(result->v, result->v);
-
 #else
 	u8 res[8];
 	if (u32_eq_one(x))
@@ -152,13 +128,7 @@ void mul_mod_p(const u32* x, const u32* y, u32* result)
 		return;
 	}
 	raw_mul(x->v, y->v, res);
-	//puts("raw mul res:");
-	//printBN(res, 8);
 	solinas_reduce(res, result);
-	// solinas_reduce_asm(res, result->v);
-	//puts("reduce res:");
-	//printBN((UINT64*)result, 4);
-
 #endif
 }
 
@@ -234,13 +204,11 @@ void inv_for_mul(const u32* input, u32* result, const u32* m, const u32* rhoM)
 	if (u32_eq_one(&u))
 	{
 		mod(&x1, m, rhoM);
-		//mod(x1, m);
 		*result = x1;
 	}
 	else
 	{
 		mod(&x2, m, rhoM);
-		//mod(x2, m);
 		*result = x2;
 	}
 
@@ -252,7 +220,6 @@ extern void montg_inv_mod_n_ex(const UINT64 a[4], UINT64 r[4]);
 // Get inversion of mod p by montgomery method that is more efficent
 void inv_for_mul_mod_p(const u32* input, u32* result)
 {
-	//MontgInvModp(input->v, result->v);
 	montg_inv_mod_p_ex(input->v, result->v);
 	montg_back_mod_p(result, result);
 }
@@ -261,22 +228,8 @@ void inv_for_mul_mod_p(const u32* input, u32* result)
 void inv_for_mul_mod_n(const u32* input, u32* result)
 {
 	const u32 ONE = { 1,0, 0, 0 };
-	// MontgInvModn(input->v, result->v);
-	// printf("input: \n");
-	// print_u32(input);
-	/// FIX: 2023-10-01 montg_inv_mod_n_ex is aligned to 16 bytes,
-	/// 				but it is supposed to call a compiler-compiled
-	///					function, which need to alinged to 16 bytes 
-	///					after push the return address from montg_inv_mod_n_ex,
-	///					so montg_inv_mod_n_ex is accually need aligned
-	///					to 8 bytes.
-	/// BUG: 2023-09-30 montg_inv_mod_n_ex has bugs, 
-	///      MontgInvModn is not the fast version but is correct.
 	montg_inv_mod_n_ex(input->v, result->v);
-	//print_u32(result);
-	// sm2n_mong_mul(result->v, ONE.v,result->v);
 	sm2n_mong_mul(result, &ONE,result);
-	//print_u32(result);
 }
 
 #define JIA
@@ -348,7 +301,6 @@ void solinas_reduce(const u8 input[8], u32* result)
 		u32_sub(result, &SM2_rhoP, result);
 	}
 	if (u32_ge(result, &SM2_P)) {
-		//u32_sub(result, SM2_P, result);
 		u32_add(result, &SM2_rhoP, result);
 	}
 
@@ -403,18 +355,8 @@ void solinas_reduce(const u8 input[8], u32* result)
 
 // a in the residue domain
 // result = a^(-1) * 2^(256) in montgomery domain
-// void MontgInvModp(const UINT64 a[4], UINT64 result[4])
 void MontgInvModp(const u32 *a, u32 *result)
 {
-	// Reference from:  The Montgomery Modular Inverse -- Revisited
-	// Ref: Intel-IPP\sources\ippcp\gsmod_inv.c
-	// UINT64 buf[5 * 4];
-
-	// UINT64* u = buf;
-	// UINT64* v = buf + 4;
-	// UINT64* r = buf + 8;
-	// UINT64* s = buf + 12;
-	// UINT64* t = buf + 16;
 	u32 u, v, r, s, t;
 	UINT64 k = 0;
 	UINT64 i = 0;
@@ -488,29 +430,17 @@ void MontgInvModp(const u32 *a, u32 *result)
 		// No need to do more
 		memcpy(result, &r, 32);
 	}
-	
 	// result = a^(-1) * 2^(256)
 }
 
 // a in the residue domain
 // result = a^(-1) * 2^(256) in montgomery domain
-// void MontgInvModn(const UINT64 a[4], UINT64 result[4])
 void MontgInvModn(const u32 *a, u32 *result)
 {
-	// Reference from:  The Montgomery Modular Inverse -- Revisited
-	// UINT64 buf[5 * 4];
-
-	// UINT64* u = buf;
-	// UINT64* v = buf + 4;
-	// UINT64* r = buf + 8;
-	// UINT64* s = buf + 12;
-	// UINT64* t = buf + 16;
 	u32 u, v, r, s, t;
-
 	UINT64 k = 0;
 	UINT64 i = 0;
 	uint8_t carry = 0;
-
 
 	// Phase I  -> Get r and k
 	memcpy(&u, SM2_N.v, 32);
@@ -821,18 +751,6 @@ void div_by_2_mod_p(const u32 *a, u32 *result)
 	result->v[2] = (tmp.v[2] >> 1) | (tmp.v[3] << 63);
 	result->v[3] = tmp.v[3] >> 1;
 }
-
-// // Solinas reduction: reduce 512-bit input to 256-bit result mod P
-// // This is a C implementation of solinas_reduce_asm
-// void solinas_reduce_asm(const UINT64 a[8], UINT64 result[4])
-// {
-// 	u32 res;
-// 	solinas_reduce(a, &res);
-// 	result[0] = res.v[0];
-// 	result[1] = res.v[1];
-// 	result[2] = res.v[2];
-// 	result[3] = res.v[3];
-// }
 
 // Montgomery multiplication: result = a * b * R^(-1) mod P
 // where R = 2^256

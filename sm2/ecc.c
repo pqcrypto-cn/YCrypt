@@ -8,24 +8,6 @@ static AFPoint highTable[256];
 static AFPoint AF_PTable[8];
 static AFPoint AF_neg_PTable[8];
 
-//static AFPoint AF_PTable[16];
-//static AFPoint AF_neg_PTable[16];
-
-/// NOTE:
-//      To make a function available for inlining across multiple files, you must:
-//      place the function in a common header file, for example foo. h.
-//      mark the function as extern __inline.
-//      #include the header file in each file where the inline function is needed
-// inline void CopyAFPoint(AFPoint* src, AFPoint* dst)
-// {
-// 	memcpy(dst, src, sizeof(AFPoint));
-// }
-// inline void CopyJPoint(JPoint* src, JPoint* dst)
-// {
-// 	memcpy(dst, src, sizeof(JPoint));
-// }
-
-
 bool equ_to_AFPoint_one(const AFPoint* point)
 {
 	return u32_eq_zero(&point->x) && u32_eq_zero(&point->y);
@@ -114,12 +96,8 @@ void jacobian_to_affine(const JPoint* point, AFPoint* result)
 
 }
 
-
-
-
 // Note: this function should
 // ALWAYS be called with different point
-
 void add_JPoint_and_AFPoint(const JPoint* point1, const AFPoint* point2, JPoint* result)
 {
 	if (equ_to_JPoint_one(point1))
@@ -136,149 +114,30 @@ void add_JPoint_and_AFPoint(const JPoint* point1, const AFPoint* point2, JPoint*
 
 	u32 z2, A, B, C2, C3, X1C2, D2, X1C22, tmp;
 	pow_mod_p(&point1->z, &z2);
-	//print_u32(&z2);
 	mul_mod_p(&point2->x, &z2, &A);
-	//print_u32(&A);
 	mul_mod_p(&point2->y, &z2, &B);
-	//print_u32(&B);
 	mul_mod_p(&B, &point1->z, &B);
-	//print_u32(&B);
 
 	sub_mod_p(&A, &point1->x, &A);
-	//print_u32(&A);
 	sub_mod_p(&B, &point1->y, &B);
-	//print_u32(&B);
 
 	pow_mod_p(&A, &C2);
-	//print_u32(&C2);
-	// printf("C2 * A: \n");
-	// print_u32(&C2);
-	// print_u32(&A);
 	mul_mod_p(&C2, &A, &C3);
-	// printf("C3: \n");
-	// print_u32(&C3);
 	mul_mod_p(&point1->x, &C2, &X1C2);
-	//print_u32(&X1C2);
 	pow_mod_p(&B, &D2);
-	//print_u32(&D2);
 
 	add_mod_p(&X1C2, &X1C2, &X1C22);
-	//print_u32(&X1C22);
 	sub_mod_p(&D2, &X1C22, &result->x);
-	//print_u32(&result->x);
 	sub_mod_p(&result->x, &C3, &result->x);
-	//print_u32(&result->x);
 	sub_mod_p(&X1C2, &result->x, &tmp);
-	//print_u32(&tmp);
 
 	mul_mod_p(&B, &tmp, &B);
-	//print_u32(&B);
 	mul_mod_p(&point1->y, &C3, &tmp);
-	//print_u32(&tmp);
 	sub_mod_p(&B, &tmp, &result->y);
-	//print_u32(&result->y);
 
 	mul_mod_p(&point1->z, &A, &result->z);
-	//print_u32(&result->z);
-
 }
 
-
-/*
-bool is_a_minus_3()
-{
-	u32 tmp;
-	//u32_add(SM2_a, { 3,0,0,0 }, tmp);
-	u32 t1 = { 3, 0, 0, 0 };
-	u32_add(&SM2_a, &t1, &tmp);
-	return u32_eq(&tmp, &SM2_P);
-}
-
-#define MINIS
-void double_JPoint(const JPoint* pt, JPoint* result)
-{
-	if (equ_to_JPoint_one(pt))
-	{
-		*result = *pt;
-		return;
-	}
-
-	u32 pz2, lambda1, py2, py_2, py2_2, py2_4, lambda2, l2_2, py4_4, lambda3, l1l1, m1, m2;
-	pow_mod_p(&pt->z, &pz2);//pz^2
-	u32 tmp1, tmp2;
-
-
-	// if (is_a_minus_3)
-	// {
-	// 	//if a == -3 then
-	// 	//3*x^2 + a*z^4 == 3*x^2 - 3*z^4 == 3*(x^2-z^4) == 3*(x-z^2)*(x+z^2)
-	// 	//x-z^2
-	// 	sub_mod_p(pt.x, pz2, tmp1);
-	// 	//x+z^2
-	// 	add_mod_p(pt.x, pz2, tmp2);
-	// 	//3*(x-z^2)*(x+z^2)
-	// 	mul_mod_p(tmp1, tmp2, tmp1);
-	// 	double_mod_p(tmp1, tmp2);
-	// 	add_mod_p(tmp1, tmp2, lambda1);
-	// }
-	// else
-	// {
-	// 	pow_mod_p(pt.x, px2); // px2 = px^2
-	// 	pow_mod_p(pz2, pz4);	// pz4 = pz^4
-	// 	double_mod_p(px2, px2_2); // px2_2 = 2px^2
-	// 	add_mod_p(px2_2, px2, px2_3); // px2_3 = 3px^2
-	// 	mul_mod_p(SM2_a, pz4, lambda1);
-	// 	add_mod_p(px2_3, lambda1, lambda1);
-	// }
-
-
-#ifdef MINIS
-	//x-z^2
-	sub_mod_p(&pt->x, &pz2, &tmp1);
-	//x+z^2
-	add_mod_p(&pt->x, &pz2, &tmp2);
-	//3*(x-z^2)*(x+z^2)
-	mul_mod_p(&tmp1, &tmp2, &tmp1);
-
-	//double_mod_p(&tmp1, &tmp2);
-	//add_mod_p(&tmp1, &tmp2, &lambda1);
-
-	mul_by_3_mod_p(&tmp1, &lambda1); // *3
-
-#else
-	pow_mod_p(pt.x, px2); // px2 = px^2
-	pow_mod_p(pz2, pz4);	// pz4 = pz^4
-	double_mod_p(px2, px2_2); // px2_2 = 2px^2
-	add_mod_p(px2_2, px2, px2_3); // px2_3 = 3px^2
-	mul_mod_p(SM2_a, pz4, lambda1);
-	add_mod_p(px2_3, lambda1, lambda1);
-#endif // MINIS
-
-
-	// l1 = 3*px^2+a*pz^4
-	pow_mod_p(&pt->y, &py2); // py2 = py^2
-
-	double_mod_p(&pt->y, &py_2); // py_2 = 2*py
-	double_mod_p(&py2, &py2_2); // py2_2 = 2*py^2
-	double_mod_p(&py2_2, &py2_4); // py2_4 = 4*py^2
-	mul_mod_p(&py2_4, &pt->x, &lambda2); // l2 = 4*px*py^2
-
-	double_mod_p(&lambda2, &l2_2); // l2 = 2*l2
-	pow_mod_p(&py2_2, &py4_4); // py4_4 = 4*py^4
-	double_mod_p(&py4_4, &lambda3); // l3 = 8^py^4
-
-	pow_mod_p(&lambda1, &l1l1); // l1l1 = l1^2
-	sub_mod_p(&l1l1, &l2_2, &result->x); // x3 = l1^2 - 2*l2
-	sub_mod_p(&lambda2, &result->x, &m1); // m1 = l2 - x3
-
-	mul_mod_p(&lambda1, &m1, &m2); // m2 = l1*(l2-x3)
-	sub_mod_p(&m2, &lambda3, &result->y); // y = l1*(l2-x3)-l3
-
-	mul_mod_p(&py_2, &pt->z, &result->z); // z = 2*py*pz
-}
-*/
-
-// Use Intel-IPP version
 void double_JPoint(const JPoint* pt, JPoint* result)
 {
 	u32 S, U, M;
@@ -381,9 +240,6 @@ void add_JPoint(const JPoint* point1, const JPoint* point2, JPoint* result)
 		result->y = y;
 		result->z = z;
 	}
-
-
-
 }
 
 void JPoint_sub_AFPoint(const JPoint* point1, const AFPoint* point2, JPoint* result)
@@ -399,7 +255,6 @@ bool is_AFPoint_reciprocal(const AFPoint* point1, const AFPoint* point2)
 {
 	u32 inversion_y;
 	neg_mod_p(&(point2->y), &inversion_y);
-	//inv_for_add(&point2->y, &inversion_y, &SM2_P);
 	return u32_eq(&point1->x, &point2->x) && u32_eq(&point1->y, &inversion_y);
 }
 
@@ -459,14 +314,12 @@ void AFPoint_neg(const AFPoint* point, AFPoint* result)
 {
 	result->x = point->x;
 	u32_sub(&SM2_P, &point->y, &result->y);
-	//inv_for_add(point.y, result.y, SM2_P);
 }
 
 void JPoint_neg(const JPoint* point, JPoint* result)
 {
 	result->x = point->x;
 	u32_sub(&SM2_P, &point->y, &result->y);
-	//inv_for_add(point.y, result.y, SM2_P);
 	result->z = point->z;
 }
 
@@ -487,15 +340,12 @@ void get_naf(const u32* pk, int naf_k[257])
 			if (k.v[0] & 0x10)//mod 2^5. the result < 2^4 
 			{
 				naf_k[i] = 0 - tmp;
-				//over_flag = u32_add(k, { tmp,0,0,0 }, k);
 				u32 t1 = { tmp, 0, 0, 0 };
 				over_flag = u32_add(&k, &t1, &k);
 			}
 			else
 			{
 				naf_k[i] = tmp;
-				//k->v[0] = __ull_rshift(k->v[0], 5);
-				//k->v[0] = __ll_lshift(k->v[0], 5);
 				k.v[0] &= 0xFFFFFFFFFFFFFFE0;
 			}
 
@@ -708,8 +558,6 @@ void get_naf_w4(const u32* pk, int8_t naf_w3[257])
 	}
 }
 
-
-
 // Just two item for each table, aka. PT[1] and PT[3]
 // Positive table store at PT
 // Negtive  table store at NT
@@ -793,10 +641,7 @@ void precompute_ptable_for_w5_all_jpoint(const AFPoint* point, JPoint PT[16], JP
 	}
 }
 
-
-
 // Note: this function return A Jacob Point
-
 // NAF method for w = 5 (ALL OPERATION IN JACOBIAN COORDINATE)
 void times_point_naf_w5_all_jpoint(const AFPoint* point, const u32* times, JPoint* result)
 {
@@ -829,7 +674,6 @@ void times_point_naf_w5_all_jpoint(const AFPoint* point, const u32* times, JPoin
 	*result = Q;
 }
 
-
 // Binary method
 void times_point_bin(const AFPoint* point, const u32* times, JPoint* result)
 {
@@ -841,7 +685,6 @@ void times_point_bin(const AFPoint* point, const u32* times, JPoint* result)
 	{
 		for (i = 63; i >= 0; i--)
 		{
-			// add_JPoint(T, T, T);
 			double_JPoint(&T, &T);
 
 			if ((times->v[blocki] & (l1 << i)) != 0) //this place can't use 1 to replace l1
@@ -992,10 +835,6 @@ size_t to_index(const u32* input, size_t i)
 		+ (get_u8_bit(input->v[3], 32 + i) << 7);
 }
 
-// Speed up using Fixed-base comb
-// described in "Software Implementation of the NIST Elliptic
-// Curves Over Prime Fields" by M Brown et. al.
-
 //write into tables
 void gen_tables()
 {
@@ -1057,323 +896,3 @@ void times_basepoint(const u32* times, JPoint* result)
 
 	*result = T;
 }
-
-/*
-// Inner test function
-static void test_naf()
-{
-	u32 k = { 0xDB5C2F3268B73059, 0x7F6A21BAE5F2D1F5, 0xECEC3F8910938B20, 0x5A4E38911AB7D687 };
-	u32  k1, k2, k3, k4, k5;
-	int i = 0;
-	int naf1[257] = { 0 };
-	char naf2[257] = { 0 };
-	char naf3[257] = { 0 };
-	char naf4[257] = { 0 };
-	char naf5[257] = { 0 };
-
-	srand((unsigned)time(NULL));
-	//get_random_u32_in_mod_n(&k);
-
-	memcpy(&k1, &k, sizeof(u32));
-	memcpy(&k2, &k, sizeof(u32));
-	memcpy(&k3, &k, sizeof(u32));
-	memcpy(&k4, &k, sizeof(u32));
-	memcpy(&k5, &k, sizeof(u32));
-
-	get_naf(&k1, naf1);
-	get_naf_w5(&k2, naf2);
-	get_naf_w3(&k3, naf3);
-	get_naf_w4(&k4, naf4);
-	get_naf_w5_2(&k5, naf5);
-
-	for (i = 0; i < 257; i++)
-	{
-		if (i % 5 == 0) puts("");
-		printf("[%2d]%3d  <--> %3d  <--> %3d  <--> %3d\n", i, naf1[i], naf2[i], naf3[i], naf4[i]);
-		//if (naf1[i] != naf2[i])
-		//{
-		//	printf("[NOT EQUAL] : i = %d\n", i);
-		//	printf("k:  0x%016llX, 0x%016llX, 0x%016llX, 0x%016llX\n", k.v[0], k.v[1], k.v[2], k.v[3]);
-		//	puts("");
-		//	//break;
-		//}
-	}
-	puts("END!");
-}
-
-static void test_naf_w3()
-{
-	u32 k = { 0xDB5C2F3268B73059, 0x7F6A21BAE5F2D1F5, 0xECEC3F8910938B20, 0x5A4E38911AB7D687 };
-	int i = 0;
-	char naf[257] = { 0 };
-
-
-	get_naf_w3(&k, naf);
-
-	for (i = 0; i < 257; i++)
-	{
-		if (i % 3 == 0) puts("");
-		printf("[%2d]%3d  <--> %3d\n", i, 0, naf[i]);
-	}
-	puts("END!");
-}
-
-static void test_naf_w4()
-{
-	u32 k = { 0xDB5C2F3268B73059, 0x7F6A21BAE5F2D1F5, 0xECEC3F8910938B20, 0x5A4E38911AB7D687 };
-	int i = 0;
-	char naf[257] = { 0 };
-
-
-	get_naf_w4(&k, naf);
-
-	for (i = 0; i < 257; i++)
-	{
-		if (i % 3 == 0) puts("");
-		printf("[%2d]%3d  <--> %3d\n", i, 0, naf[i]);
-	}
-	puts("END!");
-}
-
-static void test_times_point()
-{
-	u32  k = { 0x03D127A0327EC400, 0x21C61D2891CB940A, 0x4DCCE9C93A58C040, 0x547586B29CD2397E };
-
-	AFPoint P = 
-	{
-		0x6BCDB5B691ACDCA2, 0xF5E3A48ADB06E7D1, 0xE5B9F26CF2817C7E, 0x9FBD939ACF4E0490,
-		0xE879F713CF7B2F83, 0xB8F5A4080703F0E9, 0xB15126BE5755D975, 0x1FFD50F8BE1A17E2,
-	};
-	JPoint R1, R2, Q, Pj;
-	bool ret = false;
-
-	//srand((unsigned)time(NULL));
-	//gen_tables();
-	// Get random k and P
-	//get_random_u32_in_mod_n(&k);
-	//times_basepoint(&k, &Pj);
-	//jacobian_to_affine(&Pj, &P);
-
-	times_point_bin(&P, &k, &R1);
-	//times_point_naf_w2(&P, &k, &R2);
-	//times_point_naf_w3(&P, &k, &R2);
-	//times_point_naf_w4(&P, &k, &R2);
-	times_point_naf_w5_all_jpoint(&P, &k, &R2);
-
-	ret = equ_to_JPoint(&R1, &R2);
-	if (ret == false)
-	{
-		puts("Not equal");
-
-		puts("k = ");
-		print_u32(&k);
-
-		puts("P = ");
-		print_AFPoint(&P);
-
-		puts("R1 = ");
-		print_JPoint(&R1);
-
-		puts("R2 = ");
-		print_JPoint(&R2);
-
-	}
-	else
-	{
-		puts("Equal");
-	}
-}
-
-static void bench_times_point()
-{
-	u32  k;
-
-	AFPoint P;
-	JPoint R, Q, Pj;
-	size_t i = 0, loop = 100000;
-	clock_t t1 = 0, t2 = 0;
-	double diff = 0, speed = 0;
-
-	srand((unsigned)time(NULL));
-	gen_tables();
-
-	// Get random k and P
-	get_random_u32_in_mod_n(&k);
-	times_basepoint(&k, &Pj);
-	jacobian_to_affine(&Pj, &P);
-
-	// bench
-	// Point Mul
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_bin(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_bin time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-	// bench
-	// Point Mul
-	
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_naf_w2(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_naf_w2 time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_naf_w3(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_naf_w3 time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_naf_w4(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_naf_w4 time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_naf_w5(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_naf_w5 time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-	
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Default On JACOBIAN coordinate
-		// R = k * P
-		times_point_naf_w5_all_jpoint(&P, &k, &R);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("times_point_naf_w5_all_jpoint time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-}
-
-static void test_all_jpoint()
-{
-	AFPoint point = 
-	{ 
-		0x6BCDB5B691ACDCA2, 0xF5E3A48ADB06E7D1, 0xE5B9F26CF2817C7E, 0x9FBD939ACF4E0490,
-		0xE879F713CF7B2F83, 0xB8F5A4080703F0E9, 0xB15126BE5755D975, 0x1FFD50F8BE1A17E2, 
-	};
-	static JPoint PT[16] = { 0 };
-	static JPoint NT[16] = { 0 };
-	int i = 0;
-	JPoint r, dr;
-
-	precompute_ptable_for_w5_all_jpoint(&point, PT, NT);
-	affine_to_jacobian(&point, &r);
-	double_JPoint(&r, &dr);
-
-	for (i = 3; i < 16; i += 2)
-	{
-		add_JPoint(&r, &dr, &r);
-		if (equ_to_JPoint(&r, PT + i) == false)
-		{
-			printf("ERROR at i = %d\n", i);
-			break;
-		}
-	}
-	puts("test_all_jpoint() END!");
-}
-
-static void test_point_convert()
-{
-	AFPoint p = 
-	{
-		0x6BCDB5B691ACDCA2, 0xF5E3A48ADB06E7D1, 0xE5B9F26CF2817C7E, 0x9FBD939ACF4E0490,
-		0xE879F713CF7B2F83, 0xB8F5A4080703F0E9, 0xB15126BE5755D975, 0x1FFD50F8BE1A17E2,
-	};
-	JPoint s = JPoint_ZERO, q;
-	AFPoint r;
-	size_t i = 0, loop = 10000000;
-	clock_t t1 = 0, t2 = 0;
-	double diff = 0, speed = 0;
-
-	affine_to_jacobian(&p, &q);
-
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Convert affine coordinate to jacobian coordinate
-		jacobian_to_affine(&q, &r);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("jacobian_to_affine time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-	t1 = clock();
-	for (i = 0; i < loop; i++)
-	{
-		// Convert affine coordinate to jacobian coordinate
-		add_JPoint_and_AFPoint(&s, &p, &r);
-	}
-	t2 = clock();
-	diff = t2 - t1;
-	diff = diff / CLOCKS_PER_SEC;
-	speed = loop / diff;
-	printf("add_JPoint_and_AFPoint time: %lf s\n", diff / loop);
-	printf("speed: %lf\n\n", speed);
-
-}
-
-
-void self_main_test_point_mul()
-{
-	//test_naf();
-	//test_naf_w3();
-	//test_naf_w4();
-	//test_all_jpoint();
-	//test_point_convert();
-
-	//test_times_point();
-	bench_times_point();
-
-}
-*/

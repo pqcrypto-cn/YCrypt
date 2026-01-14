@@ -7,7 +7,6 @@
 static const UINT64 BN_ZERO[4] = { 0,0,0,0 };
 // The number of 'One' in montgomery domain
 static const UINT64 MONTG_ONE[4] = { 0x0000000000000001,0x00000000ffffffff,0x0000000000000000,0x0000000100000000 };
-//static const JPoint MONTG_JPOINT_ZERO = { {MONTG_ONE}, {MONTG_ONE}, {0,0,0,0} };
 
 // Test wether equal to montgomery one
 static inline bool montg_equal_one(const UINT64 src[4])
@@ -85,24 +84,11 @@ static inline bool montg_is_jpoint_zero(const JPoint* dst)
 //      I: Inversion
 int montg_jpoint_to_apoint(const JPoint* a, UINT64* rx, UINT64* ry)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
 	// Transform (X, Y, Z) into (x, y) = (X/Z^2, Y/Z^3)
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// UINT64 t, Zinv[4], Zisqr[4], T[4];
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const u32* az = &(a->z);
 	u32 Zinv, Zisqr, T;
-
-	//// Infinity point represented as (x, y, 0)
-	//t = az[0] | az[1] | az[2] | az[3];
-	//if (t == 0)  // Error
-	//{
-	//	return 0;
-	//}
 
 	if (montg_is_jpoint_zero(a))
 	{
@@ -121,8 +107,7 @@ int montg_jpoint_to_apoint(const JPoint* a, UINT64* rx, UINT64* ry)
 	}
 
 	montg_back_mod_p(az, &T);         // Convert z from montgomery domain to residue domain
-	//MontgInvModp(T, Zinv);           // Zinv = Z^(-1) = 1 / z
-	//inv_for_mul_mod_p(az, Zinv);
+	// Zinv = Z^(-1) = 1 / z
 	montg_inv_mod_p_ex(T.v, Zinv.v);
 	montg_sqr_mod_p(&Zinv, &Zisqr);    // Zisqr = 1 / (z^2)
 
@@ -148,15 +133,7 @@ int montg_jpoint_to_apoint(const JPoint* a, UINT64* rx, UINT64* ry)
 //      I: Inversion
 int montg_jpoint_to_apoint2(const JPoint* a, AFPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
 	// Transform (X, Y, Z) into (x, y) = (X/Z^2, Y/Z^3)
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64 t, Zinv[4], Zisqr[4], T[4];
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const u32* az = &(a->z);
@@ -165,12 +142,6 @@ int montg_jpoint_to_apoint2(const JPoint* a, AFPoint* r)
 	u32 Zinv, Zisqr, T;
 
 	//// Infinity point represented as (x, y, 0)
-	//t = az[0] | az[1] | az[2] | az[3];
-	//if (t == 0)  // Error
-	//{
-	//	return 0;
-	//}
-
 	if (montg_is_jpoint_zero(a))
 	{
 		bignum_set_to_zero(rx->v);
@@ -188,7 +159,7 @@ int montg_jpoint_to_apoint2(const JPoint* a, AFPoint* r)
 	}
 
 	montg_back_mod_p(az, &T);         // Convert z from montgomery domain to residue domain
-	//MontgInvModp(T, Zinv);           // Zinv = Z^(-1) = 1 / z
+	// Zinv = Z^(-1) = 1 / z
 	montg_inv_mod_p_ex(T.v, Zinv.v);
 	montg_sqr_mod_p(&Zinv, &Zisqr);    // Zisqr = 1 / (z^2)
 
@@ -202,15 +173,6 @@ int montg_jpoint_to_apoint2(const JPoint* a, AFPoint* r)
 // Convert affine point (residue domain) to jacobian point (montgomery domain)
 int montg_apoint_to_jpoint(const AFPoint* a, JPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
-	// Ref: E:\CryptoLib\GmSSL\gmssl_2.5.0_debug\GmSSL-master\crypto\ec\ecp_sm2z256.c\ecp_sm2z256_get_affine()
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = MONTG_ONE;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64* rz = r->z.v;
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const UINT64* az = MONTG_ONE;
@@ -235,8 +197,6 @@ int montg_apoint_to_jpoint(const AFPoint* a, JPoint* r)
 // Convert affine point (montgomery domain) to jacobian point (montgomery domain)
 int montg_apoint_to_jpoint2(const AFPoint* a, JPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
-	// Ref: E:\CryptoLib\GmSSL\gmssl_2.5.0_debug\GmSSL-master\crypto\ec\ecp_sm2z256.c\ecp_sm2z256_get_affine()
 	const UINT64* ax = a->x.v;
 	const UINT64* ay = a->y.v;
 	const UINT64* az = MONTG_ONE;
@@ -264,13 +224,6 @@ int montg_apoint_to_jpoint2(const AFPoint* a, JPoint* r)
 //      r -- in montgomery domain
 int montg_apoint_to_montg(const AFPoint* a, AFPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
-	// Ref: E:\CryptoLib\GmSSL\gmssl_2.5.0_debug\GmSSL-master\crypto\ec\ecp_sm2z256.c\ecp_sm2z256_get_affine()
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	u32* rx = &(r->x);
@@ -290,15 +243,6 @@ int montg_apoint_to_montg(const AFPoint* a, AFPoint* r)
 //      r -- in montgomery domain
 int montg_jpoint_to_montg(const JPoint* a, JPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P4
-	// Ref: E:\CryptoLib\GmSSL\gmssl_2.5.0_debug\GmSSL-master\crypto\ec\ecp_sm2z256.c\ecp_sm2z256_get_affine()
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64* rz = r->z.v;
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const u32* az = &(a->z);
@@ -321,17 +265,6 @@ int montg_jpoint_to_montg(const JPoint* a, JPoint* r)
 //      S: Square
 void montg_double_jpoint(const JPoint* a, JPoint* r)
 {
-	// Ref: Fast Prime Field Elliptic Curve Cryptography with 256 bit primes,  P8
-	// Single operations in montgomery domain for add/sub/mult-constant are equivalent as residue domain
-	// Reference from SM2 standard part I, P13
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64* rz = r->z.v;
-	// UINT64 U1[4], U2[4], U3[4], Zsqr[4], T[4];
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const u32* az = &(a->z);
@@ -339,7 +272,6 @@ void montg_double_jpoint(const JPoint* a, JPoint* r)
 	u32* ry = &(r->y);
 	u32* rz = &(r->z);
 	u32 U1, U2, U3, Zsqr, T;
-
 
 	montg_sqr_mod_p(az, &Zsqr);      // Zsqr = z^2
 
@@ -374,18 +306,6 @@ void montg_double_jpoint(const JPoint* a, JPoint* r)
 //      S: Square
 int montg_add_jpoint(const JPoint* a, const JPoint* b, JPoint* r)
 {
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// const UINT64* bx = b->x.v;
-	// const UINT64* by = b->y.v;
-	// const UINT64* bz = b->z.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64* rz = r->z.v;
-	// UINT64 t = 0;
-	// UINT64 U1[4], U2[4], U3[4], U4[4], U5[4], U6[4], U7[4], U8[4], U9[4], Z1sqr[4], Z2sqr[4], U3sqr[4], T[4];
-
 	const u32 *ax = &(a->x);
 	const u32 *ay = &(a->y);
 	const u32 *az = &(a->z);
@@ -407,20 +327,6 @@ int montg_add_jpoint(const JPoint* a, const JPoint* b, JPoint* r)
 		CopyJPoint(a, r);
 		return 1;
 	}
-
-	//// Infinity point represented as (x, y, 0)
-	//t = az[0] | az[1] | az[2] | az[3];
-	//if (t == 0)
-	//{
-	//	CopyJPoint(b, r);
-	//	return 1;
-	//}
-	//t = bz[0] | bz[1] | bz[2] | bz[3];
-	//if (t == 0)
-	//{
-	//	CopyJPoint(a, r);
-	//	return 1;
-	//}
 
 	montg_sqr_mod_p(az, &Z1sqr);       // Z1sqr = z1^2
 	montg_sqr_mod_p(bz, &Z2sqr);       // Z2sqr = z2^2
@@ -483,24 +389,12 @@ int montg_add_jpoint(const JPoint* a, const JPoint* b, JPoint* r)
 //      S: Square
 int montg_add_jpoint_and_apoint(const JPoint* a, const AFPoint* b, JPoint* r)
 {
-	// // Ref: Software implementation of the NIST elliptic curves over prime fields, P12
-	// const UINT64* ax = a->x.v;
-	// const UINT64* ay = a->y.v;
-	// const UINT64* az = a->z.v;
-	// const UINT64* bx = b->x.v;
-	// const UINT64* by = b->y.v;
-	// //const UINT64* bz = b->z.v;
-	// UINT64* rx = r->x.v;
-	// UINT64* ry = r->y.v;
-	// UINT64* rz = r->z.v;
-	// UINT64 A[4], B[4], C[4], D[4], E[4], Zsqr[4], Ccub[4], T[4];
-
 	const u32* ax = &(a->x);
 	const u32* ay = &(a->y);
 	const u32* az = &(a->z);
 	const u32* bx = &(b->x);
 	const u32* by = &(b->y);
-	//const UINT64* bz = b->z.v;
+
 	u32* rx = &(r->x);
 	u32* ry = &(r->y);
 	u32* rz = &(r->z);
@@ -549,8 +443,6 @@ int montg_add_jpoint_and_apoint(const JPoint* a, const AFPoint* b, JPoint* r)
 	return 1;
 }
 
-
-
 // Pre-compute for point, Just two item for each table, aka. PT[1] and PT[3]
 // Input: 
 //      apoint -- in residue domain
@@ -567,7 +459,6 @@ void montg_pre_compute_naf_w3(const AFPoint* apoint, AFPoint PT[4], AFPoint NT[4
 	// Get 1P, 3P
 	// P[i] = iP, i is odd
 	// P[i] = 0,  i is even
-	int i = 0;
 	JPoint r, dr;
 
 	// Convert to montgomery domain
@@ -576,11 +467,9 @@ void montg_pre_compute_naf_w3(const AFPoint* apoint, AFPoint PT[4], AFPoint NT[4
 
 	// Convert to jacobian point
 	montg_apoint_to_jpoint2(PT + 1, &r);   // r  = 1 P
-	//montg_double_jpoint(&r, &dr);          // dr = 2 P
 	montg_double_jpoint_ex(&r, &dr);          // dr = 2 P
 
 	// Get 3P and convert to residue domain
-	//montg_add_jpoint_and_apoint(&dr, PT + 1, &r);
 	montg_add_jpoint_and_apoint_ex(&dr, PT + 1, &r);
 	montg_jpoint_to_apoint2(&r, PT + 3);
 	AFPoint_neg(PT + 3, NT + 3);
@@ -624,27 +513,22 @@ void montg_times_point_naf_w3(const AFPoint* P, const u32* k, JPoint* result)
 	// Left 256 times
 	for (i = 255; i >= 0; i--)
 	{
-		//montg_double_jpoint(&Q, &Q);
 		montg_double_jpoint_ex(&Q, &Q);
 		ki = naf_k[i];
 		if (ki)
 		{
 			if (ki > 0)
 			{
-				//montg_add_jpoint_and_apoint(&Q, PT + ki, &Q);
 				montg_add_jpoint_and_apoint_ex(&Q, PT + ki, &Q);
 			}
 			else
 			{
-				//montg_add_jpoint_and_apoint(&Q, NT + (-ki), &Q);
 				montg_add_jpoint_and_apoint_ex(&Q, NT + (-ki), &Q);
 			}
 		}
 	}
 	CopyJPoint(&Q, result);
 }
-
-
 
 // Pre-compute for point
 // Input: 
@@ -665,7 +549,6 @@ void montg_pre_compute_naf_w5_all_jpoint(const AFPoint* apoint, JPoint PT[16], J
 	JPoint r, dr;
 
 	montg_apoint_to_jpoint(apoint, &r);  // r = 1 P
-	//montg_double_jpoint(&r, &dr);        // dr = 2 P
 	montg_double_jpoint_ex(&r, &dr);        // dr = 2 P
 
 	CopyJPoint(&r, PT + 1);         // 1 P
@@ -673,7 +556,6 @@ void montg_pre_compute_naf_w5_all_jpoint(const AFPoint* apoint, JPoint PT[16], J
 
 	for (i = 3; i < 16; i += 2)
 	{
-		//montg_add_jpoint(&r, &dr, &r);
 		montg_add_jpoint_ex(&r, &dr, &r);
 		CopyJPoint(&r, PT + i);
 		JPoint_neg(&r, NT + i);
@@ -707,31 +589,26 @@ void montg_times_point_naf_w5_all_jpoint(const AFPoint* P, const u32* k, JPoint*
 	ki = naf_k[256];
 	if (ki > 0)
 	{
-		//montg_add_jpoint(&Q, PT + ki, &Q);
 		montg_add_jpoint_ex(&Q, PT + ki, &Q);
 	}
 	else if(ki < 0)
 	{
-		//montg_add_jpoint(&Q, NT + (-ki), &Q);
 		montg_add_jpoint_ex(&Q, NT + (-ki), &Q);
 	}
 
 	// Left 256 times
 	for (i = 255; i >= 0; i--)
 	{
-		//montg_double_jpoint(&Q, &Q);
 		montg_double_jpoint_ex(&Q, &Q);
 		ki = naf_k[i];
 		if (ki)
 		{
 			if (ki > 0)
 			{
-				//montg_add_jpoint(&Q, PT + ki, &Q);
 				montg_add_jpoint_ex(&Q, PT + ki, &Q);
 			}
 			else
 			{
-				//montg_add_jpoint(&Q, NT + (-ki), &Q);
 				montg_add_jpoint_ex(&Q, NT + (-ki), &Q);
 			}
 		}
@@ -754,7 +631,7 @@ void montg_times_base_point(const u32* k, JPoint* result)
 	uint8_t byteIdx = 0;
 	uint8_t* pk = NULL;
 	const AFPoint *pT = NULL;
-	JPoint K0, K1, K2, K3, T;
+	JPoint K0, K1, K2, K3;
 
 	// k[0]
 	pk = (uint8_t*)(k->v + 0);
@@ -765,7 +642,6 @@ void montg_times_base_point(const u32* k, JPoint* result)
 	{
 		byteIdx = pk[i];
 		pT = &(g_montg_AFTable_for_base_point_mul[0][i][byteIdx]);
-		//montg_add_jpoint_and_apoint(&K0, pT, &K0);
 		montg_add_jpoint_and_apoint_ex(&K0, pT, &K0);
 	}
 
@@ -778,7 +654,6 @@ void montg_times_base_point(const u32* k, JPoint* result)
 	{
 		byteIdx = pk[i];
 		pT = &(g_montg_AFTable_for_base_point_mul[1][i][byteIdx]);
-		//montg_add_jpoint_and_apoint(&K1, pT, &K1);
 		montg_add_jpoint_and_apoint_ex(&K1, pT, &K1);
 	}
 
@@ -791,7 +666,6 @@ void montg_times_base_point(const u32* k, JPoint* result)
 	{
 		byteIdx = pk[i];
 		pT = &(g_montg_AFTable_for_base_point_mul[2][i][byteIdx]);
-		//montg_add_jpoint_and_apoint(&K2, pT, &K2);
 		montg_add_jpoint_and_apoint_ex(&K2, pT, &K2);
 	}
 
@@ -804,13 +678,9 @@ void montg_times_base_point(const u32* k, JPoint* result)
 	{
 		byteIdx = pk[i];
 		pT = &(g_montg_AFTable_for_base_point_mul[3][i][byteIdx]);
-		//montg_add_jpoint_and_apoint(&K3, pT, &K3);
 		montg_add_jpoint_and_apoint_ex(&K3, pT, &K3);
 	}
 
-	//montg_add_jpoint(&K0, &K1, &K0);
-	//montg_add_jpoint(&K0, &K2, &K0);
-	//montg_add_jpoint(&K0, &K3, result);
 	montg_add_jpoint_ex(&K0, &K1, &K0);
 	montg_add_jpoint_ex(&K0, &K2, &K0);
 	montg_add_jpoint_ex(&K0, &K3, result);
@@ -887,8 +757,6 @@ void montg_naive_times_point(const AFPoint* P, const u32* k, JPoint* result)
 	CopyJPoint(&T, result);
 }
 
-
-
 // ============================================================================
 // Portable C implementations of ECC assembly functions (originally in ecc_as.s)
 // These wrapper functions call the existing C implementations
@@ -928,1250 +796,3 @@ void montg_inv_mod_n_ex(const UINT64 a[4], UINT64 r[4])
 {
 	MontgInvModn((const u32*)a, (u32*)r);
 }
-
-
-/*
-static void test_to_montg()
-{
-	UINT64 a[4] = { 1, 0, 0,0 };
-	UINT64 r[4], t, b;
-
-	montg_to_mod_p(a, r);
-
-	//puts("r = ");
-	//print_u32(r);
-
-	//puts("1 = ");
-	//print_u32(MONTG_ONE);
-
-	t = sizeof(MONTG_ONE);
-	b = memcmp(r, MONTG_ONE, t);
-	//if (u32_eq(r, MONTG_ONE))
-	if (b == 0)
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_conversion()
-{
-	AFPoint a, b, r;
-	JPoint p, q;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_jpoint_to_apoint(&p, r.x.v, r.y.v);
-
-	if (equ_to_AFPoint(&r, &a))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-
-}
-
-static void test_montg_double()
-{
-	AFPoint a, r1, r2;
-	JPoint p, w1, w2;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-	double_JPoint(&p, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_add()
-{
-	AFPoint a, b, r1, r2;
-	JPoint p, q, w1, w2;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	add_JPoint(&p, &q, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint(&p, &q, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r2, &r1))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_point_mult()
-{
-	AFPoint a, r1, r2;
-	JPoint p, w1, w2, t;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-
-	times_point_naf_w5_all_jpoint(&a, &k, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_times_point_naf_w5_all_jpoint(&a, &k, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r2, &r1))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-
-		times_point_naf_w5_all_jpoint(&a, &k, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_times_point_naf_w5_all_jpoint(&a, &k, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_montg_point_mult2()
-{
-	AFPoint a, r1, r2, r3;
-	JPoint p, w1, w2, w3, t;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-
-	times_point_naf_w3(&a, &k, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	times_point_naf_w5_all_jpoint(&a, &k, &w3);
-	jacobian_to_affine(&w3, &r3);
-
-	montg_times_point_naf_w3(&a, &k, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r2, &r1))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-
-		times_point_naf_w3(&a, &k, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_times_point_naf_w3(&a, &k, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_montg_jpoint_add_apoint()
-{
-	AFPoint a, b, r1, r2, t;
-	JPoint p, q, w1, w2;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	affine_to_jacobian(&a, &p);
-	add_JPoint_and_AFPoint(&p, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_montg(&b, &t);
-	montg_add_jpoint_and_apoint(&p, &t, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_naive_point_mul()
-{
-	AFPoint a,b,c, r1, r2;
-	JPoint p, w1, w2, t, z;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;;
-
-	//get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-	// k = 2;
-	memset(&k, 0, sizeof(k));
-	k.v[0] = 2;
-
-	times_point_naf_w5_all_jpoint(&a, &k, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_montg(&a, &c);
-	montg_naive_times_point(&c, &k, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	// This part has some problem for mix point addition.
-	montg_apoint_to_montg(&a, &c);
-	montg_set_jpoint_to_zero(&z);
-	montg_add_jpoint_and_apoint(&z, &c, &z);
-	montg_double_jpoint(&z, &z);
-	montg_jpoint_to_apoint(&z, c.x.v, c.y.v);
-
-	montg_apoint_to_jpoint(&a, &t);
-	montg_set_jpoint_to_zero(&z);
-	montg_add_jpoint(&z, &t, &z);
-	montg_double_jpoint(&z, &z);
-	montg_jpoint_to_apoint(&z, b.x.v, b.y.v);
-
-	if (equ_to_AFPoint(&r2, &r1))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-
-		times_point_naf_w5_all_jpoint(&a, &k, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_apoint_to_montg(&a, &b);
-		montg_naive_times_point(&b, &k, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_montg_times_base_point()
-{
-	AFPoint a, b, r1, r2, r3, r4, r5, t, r6;
-	JPoint p, q, w1, w2, w3, w4, w5,zero, w6;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;;
-
-	// k = 2;
-	//memset(&k, 0, sizeof(k));
-	//k.v[0] = 2;
-
-	k.v[3] = 0;
-	k.v[2] = 0;
-	k.v[1] = 0;
-	k.v[0] = 0xde47b7061c0d5e2;
-
-	//get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &w1);
-	jacobian_to_affine(&w1, &r1);
-	
-	montg_times_base_point(&k, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	montg_times_base_point2(&k, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	//montg_apoint_to_jpoint(&SM2_G, &p);
-	//montg_double_jpoint(&p, &w4);
-	//montg_jpoint_to_apoint(&w4, r4.x.v, r4.y.v);
-
-	montg_apoint_to_montg(&SM2_G, &t);
-	montg_naive_times_point(&t, &k, &w5);
-	montg_jpoint_to_apoint(&w5, r5.x.v, r5.y.v);
-
-	//CopyAFPoint(g_montg_AFTable_for_base_point_mul[0][0] + 2, &t);
-	//montg_apoint_to_jpoint2(&t, &w6);
-	//montg_jpoint_to_apoint(&w6, r6.x.v, r6.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-
-		ML_mul_basepoint(&k, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_times_base_point(&k, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_montg_double_and_add()
-{
-	AFPoint a, b, r1, r2, r3, r4;
-	JPoint p, q, w1, w2, w3, w4;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	double_JPoint(&p, &w1);
-	jacobian_to_affine(&w1, &r1);
-	add_JPoint(&w1, &q, &w3);
-	jacobian_to_affine(&w3, &r3);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint(&w2, &q, &w4);
-	montg_jpoint_to_apoint(&w4, r4.x.v, r4.y.v);
-	if (equ_to_AFPoint(&r3, &r4))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_double_and_add2()
-{
-	AFPoint a, b, r1, r2, r3, r4, t;
-	JPoint p, q, w1, w2, w3, w4;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	double_JPoint(&p, &w1);
-	jacobian_to_affine(&w1, &r1);
-	add_JPoint(&w1, &q, &w3);
-	jacobian_to_affine(&w3, &r3);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-
-	//montg_apoint_to_jpoint(&b, &q);
-	//montg_add_jpoint(&w2, &q, &w4);
-	montg_apoint_to_montg(&b, &t);
-	montg_add_jpoint_and_apoint(&w2, &t, &w4);
-	montg_jpoint_to_apoint(&w4, r4.x.v, r4.y.v);
-	if (equ_to_AFPoint(&r3, &r4))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_mix_point_op()
-{
-	AFPoint t1, t2, a, b, r1, r2, r3, r4;
-	JPoint p, q, w1, w2, w3, w4;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	affine_to_jacobian(&a, &p);
-	double_JPoint(&p, &w3);
-	jacobian_to_affine(&w3, &r3);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &w4);
-	montg_jpoint_to_apoint(&w4, r4.x.v, r4.y.v);
-
-	if (!equ_to_AFPoint(&r3, &r4))
-	{
-		puts("Not Equal r3 and r4.");
-	}
-
-	add_JPoint_and_AFPoint(&w3, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_montg(&b, &t2);
-	montg_add_jpoint_and_apoint(&w4, &t2, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_mix_point_op2()
-{
-	// r = 2a + b + a
-	AFPoint t1, t2, a, b, r1, r2, r3, r4;
-	JPoint p, q, w1, w2, w3, w4;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	affine_to_jacobian(&a, &p);
-	double_JPoint(&p, &q);
-	add_JPoint_and_AFPoint(&q, &b, &q);
-	add_JPoint(&q, &p, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &q);
-	montg_apoint_to_montg(&b, &t2);
-	montg_add_jpoint_and_apoint(&q, &t2, &q);
-	montg_add_jpoint(&q, &p, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_montg_P()
-{
-	UINT64 a[4], r[4];
-
-	montg_to_mod_p(SM2_P.v, r);
-
-	print_u32(r);
-
-}
-
-static void test_montg_precompute()
-{
-	AFPoint PT[4] = { 0 };
-	AFPoint NT[4] = { 0 };
-
-	AFPoint a, r1, r2, r3;
-	JPoint p, q, w1, w2, w3, t;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-
-	//get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-	montg_pre_compute_naf_w3(&a, PT, NT);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &q);
-	montg_add_jpoint(&p, &q, &p);  // p = 3a
-
-	montg_jpoint_to_apoint(&p, r1.x.v, r1.y.v);
-	montg_apoint_to_montg(&r1, &r1);
-	if (equ_to_AFPoint(PT + 3, &r1))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-
-//extern void montg_double_jpoint_ex(UINT64 a[3*4], UINT64 r[3*4]);
-static void test_ecc_as_jpoint_double()
-{
-	//UINT64 a[3 * 4];
-	//UINT64 r[3 * 4];
-	//montg_double_jpoint_ex(a, r);
-
-	AFPoint a, r1, r2, r3;
-	JPoint p, w1, w2, w3;
-	//u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	u32 k = { 0x908504D64C6F300A, 0x85F7E4B43C7095B8, 0x7CC5323FC8D8F978, 0x0B3BFD9C66ACDAF5 };
-	int i = 0, loop = 100, flag = 0;
-
-
-	//get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-
-	double_JPoint(&p, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint(&p, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_double_jpoint_ex(&p, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-
-		double_JPoint(&p, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_apoint_to_jpoint(&a, &p);
-		montg_double_jpoint_ex(&p, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_ecc_as_mpoint_add()
-{
-	AFPoint a, b, r1, r2, t;
-	JPoint p, q, w1, w2;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	affine_to_jacobian(&a, &p);
-	add_JPoint_and_AFPoint(&p, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_montg(&b, &t);
-	//montg_add_jpoint_and_apoint(&p, &t, &w2);
-	montg_add_jpoint_and_apoint_ex(&p, &t, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &q);
-		jacobian_to_affine(&q, &b);
-
-		affine_to_jacobian(&a, &p);
-		add_JPoint_and_AFPoint(&p, &b, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_apoint_to_jpoint(&a, &p);
-		montg_apoint_to_montg(&b, &t);
-		montg_add_jpoint_and_apoint_ex(&p, &t, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_ecc_as_mpoint_add2()
-{
-	AFPoint a, b, r1, r2, t;
-	JPoint p, q, w1, w2;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	//  JPoint is zero test
-	montg_set_jpoint_to_zero(&p);
-	montg_apoint_to_montg(&b, &t);
-	montg_add_jpoint_and_apoint(&p, &t, &w1);
-	montg_jpoint_to_apoint(&w1, r1.x.v, r1.y.v);
-
-	montg_set_jpoint_to_zero(&p);
-	montg_apoint_to_montg(&b, &t);
-	montg_add_jpoint_and_apoint_ex(&p, &t, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-
-	// APoint is zero test
-	montg_apoint_to_jpoint(&a, &p);
-	memset(&t, 0 , sizeof(t));
-	montg_add_jpoint_and_apoint(&p, &t, &w1);
-	montg_jpoint_to_apoint(&w1, r1.x.v, r1.y.v);
-
-	montg_apoint_to_jpoint(&a, &p);
-	memset(&t, 0, sizeof(t));
-	montg_add_jpoint_and_apoint_ex(&p, &t, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-}
-
-static void test_ecc_as_jpoint_add()
-{
-	AFPoint a, b, r1, r2, r3;
-	JPoint p, q, w1, w2, w3;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &q);
-	jacobian_to_affine(&q, &b);
-
-	affine_to_jacobian(&a, &p);
-	add_JPoint_and_AFPoint(&p, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint_ex(&p, &q, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint(&p, &q, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-	loop = 1000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &p);
-		jacobian_to_affine(&p, &a);
-		get_random_u32_in_mod_n(&k);
-		ML_mul_basepoint(&k, &q);
-		jacobian_to_affine(&q, &b);
-
-		affine_to_jacobian(&a, &p);
-		add_JPoint_and_AFPoint(&p, &b, &w1);
-		jacobian_to_affine(&w1, &r1);
-
-		montg_apoint_to_jpoint(&a, &p);
-		montg_apoint_to_jpoint(&b, &q);
-		montg_add_jpoint_ex(&p, &q, &w2);
-		montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-		if (!equ_to_AFPoint(&r2, &r1))
-		{
-			flag = 1;
-			printf("Not Equal at %d .\n", i);
-
-			puts("k = ");
-			print_u32(&k);
-
-			puts("r1 = ");
-			print_AFPoint(&r1);
-
-			puts("r2 = ");
-			print_AFPoint(&r2);
-
-			break;
-		}
-
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-}
-
-static void test_ecc_as_jpoint_add2()
-{
-	AFPoint a, b, r1, r2, r3;
-	JPoint p, q, w1, w2, w3;
-	u32 k = { 0xaed66ce184be2329, 0xebe9bbf1f1499052, 0x993e0c873cdba6b3, 0xde47b7061c0d5e24 };
-	int i = 0, loop = 100, flag = 0;
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &b);
-	memset(&a, 0, sizeof(a));
-
-	affine_to_jacobian(&a, &p);
-	add_JPoint_and_AFPoint(&p, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint_ex(&p, &q, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint(&p, &q, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-
-	get_random_u32_in_mod_n(&k);
-	ML_mul_basepoint(&k, &p);
-	jacobian_to_affine(&p, &a);
-	memset(&b, 0, sizeof(b));
-
-	affine_to_jacobian(&a, &p);
-	add_JPoint_and_AFPoint(&p, &b, &w1);
-	jacobian_to_affine(&w1, &r1);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint_ex(&p, &q, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	montg_apoint_to_jpoint(&a, &p);
-	montg_apoint_to_jpoint(&b, &q);
-	montg_add_jpoint(&p, &q, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	if (equ_to_AFPoint(&r1, &r2))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-	}
-}
-
-static void test_ecc_as_jpoint_add3()
-{
-	AFPoint a, b, r1, r2, r3;
-	JPoint w1, w2, w3;
-
-	JPoint p = { 
-		{ 0xDFFF50E9EFF82987, 0xEEF7C0BE84FB0129, 0x1FB0F9085EAE6516, 0x0781A1B0698A7DB4, },
-		{ 0x8A3F856FBF9B1756, 0xB40DA7EEE43F8783, 0xFF49FF77D90A0B0E, 0x1F6BEF6CDDF51DF3, },
-		{ 0xC0FFCC84D8EECBFB, 0x86AE5E822E0696CC, 0xDDAF389F38F43BD8, 0x57282D671D388759, },
-	};
-	JPoint q = { 
-		{ 0xFF3F1A39FF20BA48, 0x1439C60523BFD134, 0xEA1D1AED81FA12FB, 0xCC79521AA1EFBD36, },
-		{ 0xA94D4E26FE7CD08D, 0xE7F0EACD94D2E4A7, 0xCF1E7D01C7248196, 0x1D85D2A22B8CF4AA, },
-		{ 0xD34334CF3FA89584, 0x6E1C36FD5F3C7DC0, 0xB611E83483BA28D7, 0xC16B63F09D96DB45, },
-	};
-
-	montg_add_jpoint_ex(&p, &q, &w2);
-	montg_jpoint_to_apoint(&w2, r2.x.v, r2.y.v);
-
-	montg_add_jpoint(&p, &q, &w3);
-	montg_jpoint_to_apoint(&w3, r3.x.v, r3.y.v);
-
-	if (equ_to_AFPoint(&r2, &r3))
-	{
-		puts("Equal");
-	}
-	else
-	{
-		puts("Not Equal");
-		return;
-	}
-
-}
-
-static void test_ecc_as_inv_mod_p()
-{
-	UINT64 i = 0, flag = 0, loop = 0;
-	UINT64 a[4] = { 0xccc7ece6295cb3ee, 0x9f76070d503884f0, 0x146f9bbd20642ccd, 0x87e0373e5b0004eb };
-	UINT64 b[4];
-	UINT64 r1[4];
-	UINT64 r2[4];
-	UINT64 r3[4];
-	UINT64 real[4] = { 0xd49e2992ee22def0, 0xa9345f32363e0040, 0xcb1fbe85cc35e75f, 0xb5a88d7b2d96ac0c };
-	// k = 0x161
-	// Before montg_mul: 
-	// pr = 0xc67e73115cbdf01c, 0x72853aec0e932adb, 0xd7cd1b780469ab3f, 0xf529bedb5268be65
-	// t = 0000000000000000 0000000000000000 0000000080000000 0000000000000000
-
-	srand(time(NULL));
-
-	// Use ourself method to calculate the montgomery inversion
-	inv_for_mul(a, b, &SM2_P, &SM2_rhoP);
-	montg_to_mod_p(b, r1);  // b = b * 2^256, b Should equal to real[]
-
-	// Use C version 
-	MontgInvModp(a, r3);
-
-	// Use Assembly version
-	montg_inv_mod_p_ex(a, r2);  // b = a^(-1) * 2^(256) mod(p)
-
-	if (memcmp(real, r2, 32) != 0)
-	{
-		puts("Not equal!");
-
-		puts("a = ");
-		print_u32(a);
-
-		puts("r1 = ");
-		print_u32(r1);
-
-		puts("b = ");
-		print_u32(b);
-
-		puts("r2 = ");
-		print_u32(r2);
-
-		return;
-	}
-	else
-	{
-		puts("Equal!");
-	}
-
-	loop = 100000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_p(&a);
-		
-		// Use C version 
-		MontgInvModp(a, r3);
-
-		// Use Assembly version
-		montg_inv_mod_p_ex(a, r2);  // b = a^(-1) * 2^(256) mod(p)
-
-		if (memcmp(r3, r2, 32) != 0)
-		{
-			printf("Not Equal at %d .\n", i);
-
-			puts("a = ");
-			print_u32(a);
-
-			puts("r1 = ");
-			print_u32(r1);
-
-			puts("b = ");
-			print_u32(b);
-
-			puts("r2 = ");
-			print_u32(r2);
-
-			flag = 1;
-			break;
-		}
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-
-}
-
-static void test_ecc_as_inv_mod_n()
-{
-	UINT64 i = 0, flag = 0, loop = 0;
-	UINT64 a[4] = { 0x50358362A399DADD, 0xAE2359C7E41B521B, 0xD505051020160706, 0x0D44E44AD3E05FA7 };
-	UINT64 r1[4];
-	UINT64 r2[4];
-	UINT64 r3[4];
-	UINT64 real[4] = { 0 };
-
-	srand(time(NULL));
-
-	//get_random_u32_in_mod_n(&a);
-
-	// Use C version 
-	MontgInvModn(a, r1);
-
-	// Use Assembly version
-	montg_inv_mod_n_ex(a, r2);  // b = a^(-1) * 2^(256) mod(n)
-
-	if (memcmp(r1, r2, 32) != 0)
-	{
-		puts("Not equal!");
-
-		puts("a = ");
-		print_u32(a);
-
-		puts("r1 = ");
-		print_u32(r1);
-
-		puts("r2 = ");
-		print_u32(r2);
-
-		return;
-	}
-	else
-	{
-		puts("Equal!");
-	}
-
-	loop = 100000;
-	for (i = 0; i < loop; i++)
-	{
-		get_random_u32_in_mod_n(&a);
-
-		// Use C version 
-		MontgInvModn(a, r3);
-
-		// Use Assembly version
-		montg_inv_mod_n_ex(a, r2);  // b = a^(-1) * 2^(256) mod(n)
-
-		if (memcmp(r3, r2, 32) != 0)
-		{
-			printf("Not Equal at %d .\n", i);
-
-			puts("a = ");
-			print_u32(a);
-
-			puts("r1 = ");
-			print_u32(r1);
-
-			puts("r2 = ");
-			print_u32(r2);
-
-			flag = 1;
-			break;
-		}
-	}
-
-	if (flag == 0)
-	{
-		puts("Self test passed!");
-	}
-
-}
-
-
-
-void self_main_test_montg_op()
-{
-	srand(time(NULL));
-
-	//test_to_montg();
-	//test_montg_conversion();
-	//test_montg_double();
-	//test_montg_add();
-	//test_montg_point_mult();
-	//test_montg_point_mult2();
-	//test_montg_jpoint_add_apoint();
-	//test_montg_double_and_add(); 
-	//test_montg_double_and_add2();
-	//test_montg_mix_point_op();
-	//test_montg_mix_point_op2();
-
-	//test_montg_naive_point_mul();
-	//test_montg_times_base_point();
-	//test_montg_P();
-	//test_montg_precompute();
-
-
-	//test_ecc_as_jpoint_double();
-	//test_ecc_as_mpoint_add();
-	//test_ecc_as_mpoint_add2();
-	//test_ecc_as_jpoint_add();
-	//test_ecc_as_jpoint_add2();
-	//test_ecc_as_jpoint_add3();
-	//test_ecc_as_inv_mod_p();
-	test_ecc_as_inv_mod_n();
-
-}
-*/
