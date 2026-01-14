@@ -3,8 +3,8 @@ CC = gcc
 CFLAGS = -O3
 LFLAGS = -O3
 
-# Deafult option: release
-# For debug option, USAGE: make /f Makefile2 DEBUG=1
+# Default option: release
+# For debug option, USAGE: make DEBUG=1
 ifeq ($(DEBUG), 1)
 	# Debug mode, Rewrite the CFLAG and LFLAGS
 	CFLAGS = -Wall -DDEBUG -g
@@ -12,7 +12,6 @@ ifeq ($(DEBUG), 1)
 endif
 
 CFLAGS += -Wno-strict-aliasing -Wno-missing-braces
-# -std=c99
 
 # Portable build: no x64-specific flags
 # Old x64 flags: -madx -mbmi2 -march=native
@@ -20,18 +19,23 @@ CFLAGS += -fPIC
 
 LFLAGS += -fPIC
 
-
-INCLUDE = -Iinclude
+# Include paths
+# -Iinclude: for sm2 headers
+# -I..: for include/sm_interface.h (needed by sm3)
+INCLUDE = -Iinclude -I..
 
 CFLAGS += $(INCLUDE)
 
 # Files - Pure C implementation (no assembly)
-SOURCES = extra.c sm3.c basicOp.c fieldOp.c ecc.c sm2.c utils.c ecc_montg.c ecc_basepoint_mul.c
-# Assembly sources are no longer needed - all operations implemented in C
-# ASM_SOURCES = basicOpas.s fieldOpas.s ecc_as.s
+# Note: sm3 is now sourced from ../sm3/sm3.c
+SM2_SOURCES = extra.c basicOp.c fieldOp.c ecc.c sm2.c utils.c ecc_montg.c ecc_basepoint_mul.c
+SM3_SOURCE = ../sm3/sm3.c
 
-COBJS=$(SOURCES:.c=.o)
+COBJS=$(SM2_SOURCES:.c=.o)
 COBJS := $(addprefix build/, $(COBJS))
+SM3_OBJ = build/sm3.o
+
+ALL_OBJS = $(COBJS) $(SM3_OBJ)
 
 # Make sure build exist
 $(shell mkdir -p build)
@@ -56,19 +60,24 @@ lib: libsm2.so
 test: test/test_sm2
 speed: test/test_speed
 
-libsm2.so: $(COBJS)
-	$(CC) $(LFLAGS) -shared -o $@ $(COBJS)
+libsm2.so: $(ALL_OBJS)
+	$(CC) $(LFLAGS) -shared -o $@ $(ALL_OBJS)
 
-test/test_sm2: test/test_sm2.c $(COBJS)
-	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_sm2.c $(COBJS) $(TESTLDFLAGS)
+test/test_sm2: test/test_sm2.c $(ALL_OBJS)
+	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_sm2.c $(ALL_OBJS) $(TESTLDFLAGS)
 
-test/test_speed: test/test_speed.c $(COBJS)
-	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_speed.c $(COBJS) $(TESTLDFLAGS)
+test/test_speed: test/test_speed.c $(ALL_OBJS)
+	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_speed.c $(ALL_OBJS) $(TESTLDFLAGS)
 
+# Compile SM2 sources
 $(COBJS):build/%.o:%.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
-.PHONY:clean
+# Compile SM3 source from sm3 directory
+$(SM3_OBJ): $(SM3_SOURCE)
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
+.PHONY: clean help
 clean:
 	rm -f test/test_sm2
 	rm -f test/test_speed
@@ -78,20 +87,21 @@ clean:
 	rm -f libsm2.so
 	rm -f build/*.o
 
-# clean:
-# 	rm $(OBJS) ./build/$(BIN)
-
-# $(OBJS) : $(SRCS)
-# 	$(CC) $(CFLAGS) -c yog_utils.c      	-o ./build/yog_utils.o
-# 	$(CC) $(CFLAGS) -c extra.c          	-o ./build/extra.o
-# 	$(CC) $(CFLAGS) -c sm3.c            	-o ./build/sm3.o
-# 	$(CC) $(CFLAGS) -c basicOp.c        	-o ./build/basicOp.o
-# 	$(CC) $(CFLAGS) -c fieldOp.c        	-o ./build/fieldOp.o
-# 	$(CC) $(CFLAGS) -c ecc.c            	-o ./build/ecc.o
-# 	$(CC) $(CFLAGS) -c sm2.c            	-o ./build/sm2.o
-# 	$(CC) $(CFLAGS) -c utility.c        	-o ./build/utility.o
-# 	$(CC) $(CFLAGS) -c sm2Test.c        	-o ./build/sm2Test.o
-# 	$(CC) $(CFLAGS) -c ecc2.c        		-o ./build/ecc2.o
-# 	$(CC) $(CFLAGS) -c ecc_montg.c      	-o ./build/ecc_montg.o
-# 	$(CC) $(CFLAGS) -c ecc_basepoint_mul.c  -o ./build/ecc_basepoint_mul.o
-	
+help:
+	@echo "SM2 Build Targets:"
+	@echo "  make all               - Build library, test, and speed benchmark"
+	@echo "  make lib               - Build libsm2.so"
+	@echo "  make test              - Build correctness tests"
+	@echo "  make speed             - Build speed benchmark"
+	@echo "  make clean             - Remove binaries"
+	@echo ""
+	@echo "Options:"
+	@echo "  DEBUG=1                - Enable debug mode"
+	@echo "  SANITIZER=1            - Enable address/leak sanitizers"
+	@echo "  TEST_WITH_OPENSSL=1    - Enable OpenSSL comparison"
+	@echo "  TEST_WITH_GMSSL=1      - Enable GmSSL comparison (requires GMSSL_ROOT)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make test TEST_WITH_OPENSSL=1"
+	@echo "  make speed TEST_WITH_OPENSSL=1"
+	@echo "  make all SANITIZER=1"
