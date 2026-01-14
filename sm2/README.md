@@ -95,6 +95,17 @@ LD_LIBRARY_PATH=/path/to/GmSSL/build/bin ./test/test_sm2
 ## 性能测试
 
 ```bash
+# 基础性能测试
 make speed
 ./test/test_speed
+
+# 与 OpenSSL 性能对比
+make speed TEST_WITH_OPENSSL=1
+./test/test_speed
 ```
+
+测试包括：
+- 密钥生成 (keygen)
+- 签名 (sign)
+- 验签 (verify)
+- 完整消息签名/验签 (sign_msg/verify_msg)

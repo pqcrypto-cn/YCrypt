@@ -63,7 +63,7 @@ test/test_sm2: test/test_sm2.c $(COBJS)
 	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_sm2.c $(COBJS) $(TESTLDFLAGS)
 
 test/test_speed: test/test_speed.c $(COBJS)
-	$(CC) $(CFLAGS) -o $@ test/test_speed.c $(COBJS)
+	$(CC) $(CFLAGS) $(TESTFLAGS) -o $@ test/test_speed.c $(COBJS) $(TESTLDFLAGS)
 
 $(COBJS):build/%.o:%.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
@@ -72,6 +72,9 @@ $(COBJS):build/%.o:%.c
 clean:
 	rm -f test/test_sm2
 	rm -f test/test_speed
+	rm -f test/test_basicOp
+	rm -f test/test_openssl
+	rm -f test/debug_*
 	rm -f libsm2.so
 	rm -f build/*.o
 

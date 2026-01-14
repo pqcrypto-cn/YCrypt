@@ -6,6 +6,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned long long	u8;
 typedef unsigned int		u4;
 typedef unsigned short		u2;
@@ -33,16 +37,57 @@ typedef struct
 } AFPoint;
 
 
+// ===============================
+// ============ SM2 ==============
+// ===============================
+
 typedef struct SM2SIG
 {
-    u1 r[32];
-    u1 s[32];
-}SM2SIG;
+    u32 r;
+    u32 s;
+} SM2SIG;
 
-// data here should be sm3 digest.
-void sm2_sign	(u1 * data, size_t len, SM2SIG * signature, const AFPoint * priKey);
-// data here should be sm3 digest.
-bool sm2_verify	(u1 * data, size_t len, SM2SIG * signature, const AFPoint * pubKey);
+typedef struct PrivKey
+{
+    u32 da;
+} PrivKey;
+
+typedef AFPoint PubKey;
+
+/**
+ * Generate SM2 key pair (public key and private key)
+ */
+void sm2_keypair(PubKey* pubkey, PrivKey* privkey);
+
+/**
+ * Compute public key from private key
+ */
+void sm2_get_public_key(const PrivKey* privkey, PubKey* pubkey);
+
+/**
+ * Sign a message using SM2 algorithm
+ * @return 1 on success, 0 on failure
+ */
+int sm2_sign(
+    SM2SIG* sig,
+    const u1* msg,
+    size_t msglen,
+    const u1* id,
+    size_t idlen,
+    const PubKey* pubkey,
+    const PrivKey* privkey);
+
+/**
+ * Verify a message signature using SM2 algorithm
+ * @return 1 if signature is valid, 0 if invalid
+ */
+int sm2_verify_msg(
+    const SM2SIG* sig,
+    const u1* msg,
+    size_t msg_len,
+    const u1* id,
+    size_t id_len,
+    const PubKey* pubkey);
 
 // ===============================
 // ============ SM3 ==============
@@ -78,5 +123,9 @@ void sm4_ctr_clean(SM4_CTR_CTX *ctx);
 size_t sm4_ctr(u1 *input, size_t len, u1 *output, u1 key[SM4_KEY_SIZE], u1 iv[SM4_BLOCK_SIZE]);
 size_t sm4_ctr_once(const u1 *input, size_t len, u1 *output,
     const u1 key[SM4_KEY_SIZE], const u1 iv[SM4_BLOCK_SIZE]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
