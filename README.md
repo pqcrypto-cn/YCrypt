@@ -2,7 +2,7 @@
 
 [**YCrypt**](https://pqcrypto.dev/benchmarkings/ycrypt) 是一个高性能的国密算法库，实现了 SM2 椭圆曲线公钥密码算法、SM3 密码杂凑算法和 SM4 分组密码算法。该项目由郁昱教授团队（[上海交通大学](https://crypto.sjtu.edu.cn/lab/) 、[上海期智研究院](https://sqz.ac.cn/password-48)）开发和维护，致力于提供自主可控、安全高效的国密算法实现，为国密应用提供完整的解决方案。
 
-YCrypt 在性能上表现优异，**领先于国内外所有开源国密实现**，在 **2024 年金融密码杯第二阶段赛事中荣获最高奖 —— 一等奖**。
+YCrypt 在性能上表现优异，**领先于国内外开源国密实现**，在 **2024 年金融密码杯第二阶段赛事中荣获最高奖 —— 一等奖**。
 
 ### 主要特性
 
@@ -14,7 +14,7 @@ YCrypt 在性能上表现优异，**领先于国内外所有开源国密实现**
 
 **YCrypt** is a high-performance Chinese National Cryptographic Algorithms library, implementing SM2 elliptic curve public key cryptography, SM3 cryptographic hash algorithm, and SM4 block cipher algorithm. This project is developed and maintained by Professor Yu Yu's team ([Shanghai Jiao Tong University](https://crypto.sjtu.edu.cn/lab/) and the [Shanghai Qi Zhi Institute](https://sqz.ac.cn/password-48)), committed to providing autonomous, controllable, secure and efficient implementations of Chinese national cryptographic algorithms, offering complete solutions for cryptographic applications.
 
-YCrypt demonstrates excellent performance, **leading all domestic and international open-source implementations of Chinese national cryptographic algorithms**. It won **the highest award - First Prize in the second phase of the 2024 Financial Cryptography Cup**.
+YCrypt demonstrates excellent performance, **leading all domestic and international open-source implementations of SM2//3/4 cryptographic algorithms**. It won **the highest award - First Prize in the second phase of the 2024 Financial Cryptography Cup**.
 
 ### Key Features
 
