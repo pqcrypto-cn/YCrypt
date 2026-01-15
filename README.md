@@ -14,7 +14,7 @@ YCrypt 在性能上表现优异，**领先于国内外开源国密实现**，在
 
 **YCrypt** is a high-performance Chinese National Cryptographic Algorithms library, implementing SM2 elliptic curve public key cryptography, SM3 cryptographic hash algorithm, and SM4 block cipher algorithm. This project is developed and maintained by Professor Yu Yu's team ([Shanghai Jiao Tong University](https://crypto.sjtu.edu.cn/lab/) and the [Shanghai Qi Zhi Institute](https://sqz.ac.cn/password-48)), committed to providing autonomous, controllable, secure and efficient implementations of Chinese national cryptographic algorithms, offering complete solutions for cryptographic applications.
 
-YCrypt demonstrates excellent performance, **leading all domestic and international open-source implementations of SM2//3/4 cryptographic algorithms**. It won **the highest award - First Prize in the second phase of the 2024 Financial Cryptography Cup**.
+YCrypt demonstrates excellent performance, **leading all domestic and international open-source implementations of SM2/3/4 cryptographic algorithms**. It won **the highest award - First Prize in the second phase of the 2024 Financial Cryptography Cup**.
 
 ### Key Features
 
