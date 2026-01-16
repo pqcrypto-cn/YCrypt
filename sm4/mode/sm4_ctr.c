@@ -38,7 +38,7 @@ void sm4_ctr_init(SM4_CTR_CTX *ctx, const uint8_t key[SM4_KEY_SIZE],
 {
     sm4_key_schedule(key, ctx->rk);
     memcpy(ctx->counter, iv, SM4_BLOCK_SIZE);
-    ctx->keystream_used = SM4_BLOCK_SIZE; /* Force keystream generation on first use */
+    ctx->buffer_used = SM4_BLOCK_SIZE; /* Force buffer generation on first use */
 }
 
 /**
@@ -49,31 +49,31 @@ void sm4_ctr_update(SM4_CTR_CTX *ctx, const uint8_t *in, uint8_t *out, size_t le
 {
     size_t i = 0;
 
-    /* Use remaining keystream from previous call */
-    while (i < len && ctx->keystream_used < SM4_BLOCK_SIZE) {
-        out[i] = in[i] ^ ctx->keystream[ctx->keystream_used];
+    /* Use remaining buffer from previous call */
+    while (i < len && ctx->buffer_used < SM4_BLOCK_SIZE) {
+        out[i] = in[i] ^ ctx->buffer[ctx->buffer_used];
         i++;
-        ctx->keystream_used++;
+        ctx->buffer_used++;
     }
 
     /* Process full blocks */
     while (i + SM4_BLOCK_SIZE <= len) {
-        sm4_encrypt(ctx->rk, ctx->counter, ctx->keystream);
+        sm4_encrypt(ctx->rk, ctx->counter, ctx->buffer);
         ctr_inc(ctx->counter);
-        xor_block(out + i, in + i, ctx->keystream, SM4_BLOCK_SIZE);
+        xor_block(out + i, in + i, ctx->buffer, SM4_BLOCK_SIZE);
         i += SM4_BLOCK_SIZE;
     }
 
     /* Handle remaining bytes */
     if (i < len) {
-        sm4_encrypt(ctx->rk, ctx->counter, ctx->keystream);
+        sm4_encrypt(ctx->rk, ctx->counter, ctx->buffer);
         ctr_inc(ctx->counter);
-        ctx->keystream_used = 0;
+        ctx->buffer_used = 0;
 
         while (i < len) {
-            out[i] = in[i] ^ ctx->keystream[ctx->keystream_used];
+            out[i] = in[i] ^ ctx->buffer[ctx->buffer_used];
             i++;
-            ctx->keystream_used++;
+            ctx->buffer_used++;
         }
     }
 }

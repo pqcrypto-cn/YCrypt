@@ -110,8 +110,8 @@ void sm4_decrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
 typedef struct {
     uint32_t rk[SM4_KEY_SCHEDULE];
     u1 counter[SM4_BLOCK_SIZE];
-    u1 keystream[SM4_BLOCK_SIZE];
-    size_t keystream_used;
+    u1 buffer[SM4_BLOCK_SIZE];
+    size_t buffer_used;
 } SM4_CTR_CTX;
 
 /* SM4 CTR mode streaming API */
