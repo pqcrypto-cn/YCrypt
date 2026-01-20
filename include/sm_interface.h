@@ -106,6 +106,20 @@ void sm4_encrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
 void sm4_decrypt(const uint32_t rk[SM4_KEY_SCHEDULE],
     const u1 ciphertext[SM4_BLOCK_SIZE], u1 plaintext[SM4_BLOCK_SIZE]);
 
+/* SM4 CBC mode */
+void sm4_cbc_encrypt(
+    const uint32_t rk[SM4_KEY_SCHEDULE],
+    const uint8_t iv[SM4_BLOCK_SIZE],
+    const uint8_t *input,
+    uint8_t *output,
+    size_t length);
+void sm4_cbc_decrypt(
+    const uint32_t rk[SM4_KEY_SCHEDULE],
+    const uint8_t iv[SM4_BLOCK_SIZE],
+    const uint8_t *input,
+    uint8_t *output,
+    size_t length);
+
 /* SM4 CTR mode context */
 typedef struct {
     uint32_t rk[SM4_KEY_SCHEDULE];
