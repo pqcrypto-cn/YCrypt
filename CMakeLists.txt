@@ -69,6 +69,7 @@ add_library(ycrypt SHARED
     # SM4 sources
     sm4/sm4.c
     sm4/mode/sm4_ctr.c
+    sm4/mode/sm4_cbc.c
     # SM2 sources
     sm2/extra.c
     sm2/basicOp.c
@@ -104,6 +105,7 @@ add_library(ycrypt_static STATIC
     # SM4 sources
     sm4/sm4.c
     sm4/mode/sm4_ctr.c
+    sm4/mode/sm4_cbc.c
     # SM2 sources
     sm2/extra.c
     sm2/basicOp.c

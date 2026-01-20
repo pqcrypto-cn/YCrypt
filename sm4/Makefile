@@ -7,12 +7,14 @@ INCLUDE_PATH = -I$(PROJECT_HOME) -I$(PROJECT_HOME)/include
 CFLAGS += $(INCLUDE_PATH)
 
 # Source files for reference implementation
-SRCS_REF = sm4.c mode/sm4_ctr.c
+SRCS_REF = sm4.c mode/sm4_ctr.c mode/sm4_cbc.c
 
 # Optional: OpenSSL comparison
 ifeq ($(TEST_WITH_OPENSSL),1)
 CFLAGS += -DTEST_WITH_OPENSSL
-LDFLAGS += -lcrypto
+OPENSSL_PREFIX := $(shell brew --prefix openssl@3 2>/dev/null || brew --prefix openssl 2>/dev/null || echo "/usr/local")
+CFLAGS += -I$(OPENSSL_PREFIX)/include
+LDFLAGS += -L$(OPENSSL_PREFIX)/lib -lcrypto
 endif
 
 # Optional: Sanitizers for debugging

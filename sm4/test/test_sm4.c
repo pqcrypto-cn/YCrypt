@@ -12,6 +12,7 @@
 
 #include "../include/sm4.h"
 #include "../include/sm4_ctr.h"
+#include "../include/sm4_cbc.h"
 
 #define NTESTS 10000
 
@@ -68,6 +69,64 @@ static int openssl_sm4_ctr(const uint8_t *input, size_t len, uint8_t *output,
 
     EVP_CIPHER_CTX_free(ctx);
     return 0;
+}
+
+static int openssl_sm4_cbc_encrypt(const uint8_t *input, size_t len, uint8_t *output,
+                                    const uint8_t *key, const uint8_t *iv)
+{
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return -1;
+
+    if (EVP_EncryptInit_ex(ctx, EVP_sm4_cbc(), NULL, key, iv) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    /* Disable padding for CBC mode */
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+    int outlen, tmplen;
+    if (EVP_EncryptUpdate(ctx, output, &outlen, input, (int)len) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    if (EVP_EncryptFinal_ex(ctx, output + outlen, &tmplen) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    return outlen + tmplen;
+}
+
+static int openssl_sm4_cbc_decrypt(const uint8_t *input, size_t len, uint8_t *output,
+                                    const uint8_t *key, const uint8_t *iv)
+{
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return -1;
+
+    if (EVP_DecryptInit_ex(ctx, EVP_sm4_cbc(), NULL, key, iv) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    /* Disable padding for CBC mode */
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+    int outlen, tmplen;
+    if (EVP_DecryptUpdate(ctx, output, &outlen, input, (int)len) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    if (EVP_DecryptFinal_ex(ctx, output + outlen, &tmplen) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    return outlen + tmplen;
 }
 #endif
 
@@ -327,6 +386,170 @@ static int sm4_ctr_self_check(void)
     return pass;
 }
 
+/* ============================================================
+ * SM4 CBC Tests
+ * ============================================================ */
+
+static int sm4_cbc_self_check(void)
+{
+    printf("\n========== SM4 CBC Self Check ==========\n");
+
+    const uint8_t key[16] = {
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+        0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10
+    };
+    const uint8_t iv[16] = {
+        0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0,
+        0xF0, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12
+    };
+
+    uint32_t rk[SM4_KEY_SCHEDULE];
+    sm4_key_schedule(key, rk);
+
+    int pass = 1;
+
+    /* ========== OpenSSL generated test vectors ========== */
+    printf("[+] Testing with OpenSSL generated test vectors\n");
+
+    /* Test case 1: 16-byte block (single block) */
+    {
+        uint8_t plaintext1[16] = {
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10
+        };
+        uint8_t ciphertext1[16] = {0};
+        const uint8_t expected1[16] = {
+            0xD4, 0x81, 0x4B, 0x61, 0x1F, 0xCA, 0xF1, 0xD9,
+            0xAB, 0x58, 0x98, 0xA7, 0x69, 0x4C, 0xEA, 0xEE
+        };
+
+        sm4_cbc_encrypt(rk, iv, plaintext1, ciphertext1, 16);
+
+        if (memcmp(ciphertext1, expected1, 16) != 0) {
+            TEST_FAIL("CBC test vector 1 (single block)");
+            print_hex("Expected", expected1, 16);
+            print_hex("Got     ", ciphertext1, 16);
+            pass = 0;
+        } else {
+            TEST_PASS("CBC test vector 1 (single block)");
+        }
+    }
+
+    /* Test case 2: 32-byte (two blocks) */
+    {
+        uint8_t plaintext2[32] = {
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10
+        };
+        uint8_t ciphertext2[32] = {0};
+        const uint8_t expected2[32] = {
+            0xD4, 0x81, 0x4B, 0x61, 0x1F, 0xCA, 0xF1, 0xD9,
+            0xAB, 0x58, 0x98, 0xA7, 0x69, 0x4C, 0xEA, 0xEE,
+            0x0E, 0x83, 0x4B, 0x61, 0x07, 0x8A, 0xE1, 0x8A,
+            0x5E, 0x02, 0xCB, 0x05, 0x05, 0xA3, 0x2C, 0xB9
+        };
+
+        sm4_cbc_encrypt(rk, iv, plaintext2, ciphertext2, 32);
+
+        if (memcmp(ciphertext2, expected2, 32) != 0) {
+            TEST_FAIL("CBC test vector 2 (two blocks)");
+            print_hex("Expected", expected2, 32);
+            print_hex("Got     ", ciphertext2, 32);
+            pass = 0;
+        } else {
+            TEST_PASS("CBC test vector 2 (two blocks)");
+        }
+    }
+
+    /* Test case 3: 64 bytes (four blocks) */
+    {
+        uint8_t plaintext3[64];
+        memset(plaintext3, 0xAA, 64);
+        uint8_t ciphertext3[64] = {0};
+        const uint8_t expected3[64] = {
+            0x23, 0x3B, 0x32, 0xDD, 0xC2, 0x40, 0x73, 0x8D,
+            0xB0, 0x34, 0x6D, 0x07, 0x08, 0x65, 0x6E, 0x4B,
+            0x2D, 0x96, 0x67, 0x20, 0xB0, 0x1D, 0x65, 0xE1,
+            0x45, 0x7F, 0x53, 0x1E, 0xD2, 0xEF, 0x39, 0xCF,
+            0x3E, 0x4F, 0xA4, 0xD8, 0x8D, 0x8F, 0xD9, 0xEB,
+            0x9D, 0x82, 0xFA, 0xC5, 0x9A, 0x17, 0x82, 0x37,
+            0x10, 0x21, 0x72, 0x1B, 0x62, 0x28, 0x8D, 0x07,
+            0xAA, 0xDD, 0xFF, 0x32, 0x3A, 0xD7, 0x7E, 0x20
+        };
+
+        sm4_cbc_encrypt(rk, iv, plaintext3, ciphertext3, 64);
+
+        if (memcmp(ciphertext3, expected3, 64) != 0) {
+            TEST_FAIL("CBC test vector 3 (64 bytes)");
+            print_hex("Expected", expected3, 32);
+            print_hex("Got     ", ciphertext3, 32);
+            pass = 0;
+        } else {
+            TEST_PASS("CBC test vector 3 (64 bytes)");
+        }
+    }
+
+    /* ========== Functional tests ========== */
+    printf("[+] Testing encrypt-decrypt roundtrip\n");
+
+    /* Test: Encrypt then decrypt should recover plaintext */
+    {
+        uint8_t plaintext[96];
+        uint8_t ciphertext[96];
+        uint8_t recovered[96];
+
+        random_bytes(plaintext, sizeof(plaintext));
+
+        sm4_cbc_encrypt(rk, iv, plaintext, ciphertext, sizeof(plaintext));
+        sm4_cbc_decrypt(rk, iv, ciphertext, recovered, sizeof(ciphertext));
+
+        if (memcmp(plaintext, recovered, sizeof(plaintext)) != 0) {
+            TEST_FAIL("CBC encrypt-decrypt roundtrip");
+            pass = 0;
+        } else {
+            TEST_PASS("CBC encrypt-decrypt roundtrip");
+        }
+    }
+
+    /* Test: Various message lengths (multiples of 16) */
+    {
+        int lengths[] = {16, 32, 48, 64, 80, 96, 112, 128, 256, 512, 1024};
+        int num_lengths = sizeof(lengths) / sizeof(lengths[0]);
+        int all_pass = 1;
+
+        for (int i = 0; i < num_lengths; i++) {
+            int len = lengths[i];
+            uint8_t *pt = malloc(len);
+            uint8_t *ct = malloc(len);
+            uint8_t *rt = malloc(len);
+
+            random_bytes(pt, len);
+
+            sm4_cbc_encrypt(rk, iv, pt, ct, len);
+            sm4_cbc_decrypt(rk, iv, ct, rt, len);
+
+            if (memcmp(pt, rt, len) != 0) {
+                printf("[FAIL] CBC roundtrip len=%d\n", len);
+                all_pass = 0;
+            }
+
+            free(pt);
+            free(ct);
+            free(rt);
+        }
+
+        if (all_pass) {
+            TEST_PASS("CBC various message lengths");
+        } else {
+            pass = 0;
+        }
+    }
+
+    return pass;
+}
+
 #ifdef TEST_WITH_OPENSSL
 static int test_sm4_ctr_vs_openssl(void)
 {
@@ -388,6 +611,103 @@ static int test_sm4_ctr_vs_openssl(void)
         return 0;
     }
 }
+
+static int test_sm4_cbc_vs_openssl(void)
+{
+    printf("\n========== SM4 CBC vs OpenSSL Test ==========\n");
+
+    const uint8_t key[16] = {
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+        0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10
+    };
+
+    uint8_t *plaintext = malloc(4096);
+    uint8_t *our_enc_result = malloc(4096);
+    uint8_t *our_dec_result = malloc(4096);
+    uint8_t *openssl_enc_result = malloc(4096);
+    uint8_t *openssl_dec_result = malloc(4096);
+    uint8_t iv[16], iv_copy[16];
+    uint32_t rk[SM4_KEY_SCHEDULE];
+
+    int fail_count = 0;
+
+    srand((unsigned int)time(NULL));
+    sm4_key_schedule(key, rk);
+
+    for (int test = 0; test < NTESTS; test++) {
+        /* Random length (multiple of 16) from 16 to 4096 */
+        size_t len = ((rand() % 256) + 1) * 16;
+
+        random_bytes(plaintext, len);
+        random_bytes(iv, 16);
+        memcpy(iv_copy, iv, 16);
+
+        /* Our implementation - encrypt */
+        sm4_cbc_encrypt(rk, iv, plaintext, our_enc_result, len);
+
+        /* OpenSSL implementation - encrypt */
+        int openssl_enc_len = openssl_sm4_cbc_encrypt(plaintext, len, openssl_enc_result, key, iv_copy);
+        if (openssl_enc_len < 0) {
+            printf("[ERROR] OpenSSL encryption failed\n");
+            fail_count++;
+            continue;
+        }
+
+        /* Compare encryption results */
+        if (memcmp(our_enc_result, openssl_enc_result, len) != 0) {
+            fail_count++;
+            if (fail_count <= 3) {
+                printf("[FAIL] Encryption mismatch at test %d, len=%zu\n", test, len);
+                print_hex("IV", iv, 16);
+                print_hex("Our   ", our_enc_result, len > 32 ? 32 : len);
+                print_hex("OpenSSL", openssl_enc_result, len > 32 ? 32 : len);
+            }
+            continue;
+        }
+
+        /* Test decryption */
+        memcpy(iv_copy, iv, 16);
+        sm4_cbc_decrypt(rk, iv, our_enc_result, our_dec_result, len);
+
+        int openssl_dec_len = openssl_sm4_cbc_decrypt(our_enc_result, len, openssl_dec_result, key, iv_copy);
+        if (openssl_dec_len < 0) {
+            printf("[ERROR] OpenSSL decryption failed\n");
+            fail_count++;
+            continue;
+        }
+
+        /* Compare decryption results with original plaintext */
+        if (memcmp(our_dec_result, plaintext, len) != 0) {
+            fail_count++;
+            if (fail_count <= 3) {
+                printf("[FAIL] Our decryption failed at test %d, len=%zu\n", test, len);
+            }
+            continue;
+        }
+
+        if (memcmp(openssl_dec_result, plaintext, len) != 0) {
+            fail_count++;
+            if (fail_count <= 3) {
+                printf("[FAIL] OpenSSL decryption failed at test %d, len=%zu\n", test, len);
+            }
+            continue;
+        }
+    }
+
+    free(plaintext);
+    free(our_enc_result);
+    free(our_dec_result);
+    free(openssl_enc_result);
+    free(openssl_dec_result);
+
+    if (fail_count == 0) {
+        printf("[PASS] All %d tests passed against OpenSSL\n", NTESTS);
+        return 1;
+    } else {
+        printf("[FAIL] %d/%d tests failed against OpenSSL\n", fail_count, NTESTS);
+        return 0;
+    }
+}
 #endif
 
 /* ============================================================
@@ -414,9 +734,19 @@ int main(void)
         all_pass = 0;
     }
 
+    /* CBC self check */
+    if (!sm4_cbc_self_check()) {
+        all_pass = 0;
+    }
+
 #ifdef TEST_WITH_OPENSSL
     /* CTR vs OpenSSL */
     if (!test_sm4_ctr_vs_openssl()) {
+        all_pass = 0;
+    }
+
+    /* CBC vs OpenSSL */
+    if (!test_sm4_cbc_vs_openssl()) {
         all_pass = 0;
     }
 #else

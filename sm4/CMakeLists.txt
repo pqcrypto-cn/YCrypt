@@ -5,6 +5,7 @@
 add_library(sm4 STATIC
     sm4.c
     mode/sm4_ctr.c
+    mode/sm4_cbc.c
 )
 
 target_include_directories(sm4
@@ -19,6 +20,7 @@ target_compile_options(sm4 PRIVATE ${COMMON_C_FLAGS})
 add_library(sm4_shared SHARED
     sm4.c
     mode/sm4_ctr.c
+    mode/sm4_cbc.c
 )
 
 target_include_directories(sm4_shared
