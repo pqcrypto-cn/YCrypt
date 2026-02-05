@@ -77,6 +77,7 @@ add_library(ycrypt SHARED
     sm2/ecc.c
     sm2/sm2.c
     sm2/utils.c
+    sm2/randombytes.c
     sm2/ecc_montg.c
     sm2/ecc_basepoint_mul.c
 )
@@ -113,6 +114,7 @@ add_library(ycrypt_static STATIC
     sm2/ecc.c
     sm2/sm2.c
     sm2/utils.c
+    sm2/randombytes.c
     sm2/ecc_montg.c
     sm2/ecc_basepoint_mul.c
 )

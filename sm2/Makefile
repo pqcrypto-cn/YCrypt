@@ -28,7 +28,7 @@ CFLAGS += $(INCLUDE)
 
 # Files - Pure C implementation (no assembly)
 # Note: sm3 is now sourced from ../sm3/sm3.c
-SM2_SOURCES = extra.c basicOp.c fieldOp.c ecc.c sm2.c utils.c ecc_montg.c ecc_basepoint_mul.c
+SM2_SOURCES = extra.c basicOp.c fieldOp.c ecc.c sm2.c utils.c ecc_montg.c ecc_basepoint_mul.c randombytes.c
 SM3_SOURCE = ../sm3/sm3.c
 
 COBJS=$(SM2_SOURCES:.c=.o)

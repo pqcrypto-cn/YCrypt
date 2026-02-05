@@ -1,4 +1,5 @@
 #include "include/utils.h"
+#include "include/randombytes.h"
 
 void printBN(UINT64* a, size_t size) {
 	for (size_t i = 0; i < size; i++) {
@@ -84,16 +85,6 @@ void print_uchar_limited(const uint8_t* data, size_t len)
 	puts("");
 }
 
-
-// Generate random data in len
-void gen_rand_data(uint8_t* data, uint32_t len)
-{
-	uint32_t i = 0;
-	for (i = 0; i < len; i++)
-	{
-		data[i] = (uint8_t)(rand());
-	}
-}
 
 //#define U256_DISPLAY
 void print_u32(const u32* input)
@@ -196,7 +187,7 @@ void random_fill_non_zero(uint8_t * buffer, size_t len)
 	{
 		do
 		{
-			buffer[i] = rand() & 0xff;
+			randombytes(&buffer[i], 1);
 
 		} while (buffer[i] == 0);
 	}
@@ -204,24 +195,7 @@ void random_fill_non_zero(uint8_t * buffer, size_t len)
 
 void random_fill(uint8_t * buffer, size_t len)
 {
-	UINT64 i = 0, len2, res;
-	uint16_t* p2 = (uint16_t*)buffer;
-
-	srand((unsigned)time(NULL));
-	
-	len2 = len / 2;
-	res = len & 1;
-
-	for (i = 0; i < len2; i++)
-	{
-		p2[i] = (uint16_t)rand();
-	}
-
-	// The last byte
-	if (res)
-	{
-		*(uint8_t*)(&p2[i]) = (uint8_t)rand();
-	}
+	randombytes(buffer, len);
 }
 
 int get_file_size(char* filename, uint32_t* outlen)

@@ -33,9 +33,6 @@ void print_uchar(const uint8_t* data, size_t len);
 void print_uchar_limited(const uint8_t* data, size_t len);
 
 
-// Generate random data in len
-void gen_rand_data(uint8_t* data, uint32_t len);
-
 void print_u32(const u32* input);
 
 void print_affine_point(const AFPoint* point);

@@ -12,6 +12,7 @@ set(SM2_SOURCES
     utils.c
     ecc_montg.c
     ecc_basepoint_mul.c
+    randombytes.c
 )
 
 # SM2 Library
